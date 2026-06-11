@@ -1,0 +1,20 @@
+{
+  "name": "Raccoon Bets",
+  "short_name": "Raccoon Bets",
+  "description": "Private prediction markets for friend groups.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff8e7",
+  "theme_color": "#fff8e7",
+  "categories": ["entertainment", "social", "finance"],
+  "lang": "en",
+  "icons": [
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "maskable" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" },
+    { "src": "/apple-touch-icon.png", "type": "image/png", "sizes": "180x180", "purpose": "any" }
+  ]
+}

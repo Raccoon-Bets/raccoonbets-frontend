@@ -1,0 +1,138 @@
+// Global plumbing for the Sticker Club system: page background, type scale,
+// shared view containers, and form-layout helpers.
+
+* {
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--rb-font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--rb-ink);
+  background-color: var(--rb-bg);
+  background-image: radial-gradient(var(--rb-bg-dot) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--rb-font-display);
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+h2 {
+  font-size: 19px;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+a {
+  color: var(--rb-ink);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+small {
+  font-size: 12px;
+  color: var(--rb-muted);
+}
+
+// Page-width containers and small layout helpers shared by views.
+
+.auth-view {
+  max-width: 480px;
+  padding: var(--spacing-lg);
+  margin: 0 auto;
+}
+
+.group-view {
+  max-width: 720px;
+  padding: var(--spacing-lg);
+  margin: 0 auto;
+}
+
+.form-field {
+  margin: 0 0 var(--spacing-md);
+}
+
+.form-field > label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0;
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: var(--rb-muted);
+}
+
+.inline-message {
+  margin: 0 0 var(--spacing-md);
+}
+
+// Dashed section rule used by feed-style section headings.
+.section-head {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  margin: var(--spacing-lg) 0 var(--spacing-md);
+  font-family: var(--rb-font-display);
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+
+  &::after {
+    flex: 1;
+    content: '';
+    border-top: var(--rb-border-width-control) dashed var(--rb-bg-dot);
+  }
+}
+
+// Major content sections of a group view, one sticker card each.
+.detail-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+// PrimeVue widgets the preset can't reach: chunky control borders. The
+// doubled class out-specifies PrimeVue's runtime-injected single-class rules.
+.p-inputtext.p-component,
+.p-textarea.p-component,
+.p-select.p-component {
+  border-width: var(--rb-border-width-control);
+}

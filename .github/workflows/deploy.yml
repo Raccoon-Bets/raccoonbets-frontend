@@ -1,0 +1,63 @@
+name: Deploy
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Runs when CI passes
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+
+# Allow one concurrent deployment
+concurrency:
+  group: deploy-frontend
+  cancel-in-progress: true
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+jobs:
+  deploy:
+    name: Deploy to Fly.io
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Set up flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@1.6
+      - name: Deploy to Fly.io
+        env:
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+        run: >-
+          flyctl deploy --remote-only
+          --build-arg "VITE_SENTRY_DSN=$VITE_SENTRY_DSN"
+          --build-arg "VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY"
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          cache: pnpm
+          node-version-file: .nvmrc
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build for source maps
+        run: pnpm run build
+        env:
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+      - name: Create Sentry release
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: timcodes
+          SENTRY_PROJECT: raccoonbets-frontend
+        with:
+          environment: production
+          release: ${{ github.sha }}
+          sourcemaps: './dist'
+          ignore_missing: true

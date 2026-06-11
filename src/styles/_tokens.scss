@@ -1,0 +1,60 @@
+// Sticker Club design tokens. PrimeVue's semantic tokens are mapped onto
+// these in src/config/theme.ts; everything else reads them directly.
+
+:root {
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+
+  // Candy Cream (light)
+  --rb-bg: #fff8e7;
+  --rb-bg-dot: #f3e3b9;
+  --rb-surface: #fff;
+  --rb-ink: #1a1a1a;
+  --rb-muted: #6b6b6b;
+  --rb-primary: #ffd23f;
+  --rb-primary-ink: #1a1a1a;
+  --rb-positive-bg: #b7f0ad;
+  --rb-positive-ink: #1a1a1a;
+  --rb-negative-bg: #ffb5c0;
+  --rb-negative-ink: #1a1a1a;
+  --rb-info-bg: #9ad7ff;
+  --rb-info-ink: #1a1a1a;
+  --rb-shadow-color: #1a1a1a;
+  --rb-focus-ring: #1a1a1a;
+
+  // Shape & depth
+  --rb-border-width: 3px;
+  --rb-border-width-control: 2.5px;
+  --rb-radius-card: 18px;
+  --rb-radius-control: 12px;
+  --rb-radius-pill: 999px;
+  --rb-shadow-card: 6px 6px 0 var(--rb-shadow-color);
+  --rb-shadow-control: 3px 3px 0 var(--rb-shadow-color);
+
+  // Type
+  --rb-font-display: 'Baloo 2 Variable', system-ui, sans-serif;
+  --rb-font-body: 'Nunito Variable', system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    // Raccoon Night (dark)
+    --rb-bg: #181230;
+    --rb-bg-dot: #241c42;
+    --rb-surface: #2a2348;
+    --rb-ink: #efeaff;
+    --rb-muted: #b8aee6;
+    --rb-primary: #7a5ce0;
+    --rb-primary-ink: #fff;
+    --rb-positive-bg: #1f4d40;
+    --rb-positive-ink: #9af0d3;
+    --rb-negative-bg: #4d2347;
+    --rb-negative-ink: #ffb5e2;
+    --rb-info-bg: #1f3a55;
+    --rb-info-ink: #9ad7ff;
+    --rb-shadow-color: rgb(138 108 240 / 45%);
+    --rb-focus-ring: #ffd23f;
+  }
+}

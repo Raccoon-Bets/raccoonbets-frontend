@@ -1,0 +1,33 @@
+server {
+    listen  8080      default_server;
+    listen  [::]:8080 default_server;
+    server_name _;
+
+    # Security headers
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com 'sha256-PNatgd1dkdicp6dJg6IkJLsZEtoBw4hDP+Og+KIAOr4='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.raccoonbets.org wss://api.raccoonbets.org https://*.ingest.sentry.io https://*.sentry.io; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.raccoonbets.org; frame-ancestors 'none';" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    location / {
+        root      /usr/share/nginx/html;
+        index     index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+
+    error_page  500 502 503 504  /50x.html;
+    location = /50x.html {
+        root  /usr/share/nginx/html;
+    }
+}
+
+# Internal server for stub_status (not exposed externally)
+server {
+    listen 127.0.0.1:8081;
+    server_name localhost;
+
+    location /stub_status {
+        stub_status;
+        allow 127.0.0.1;
+        deny all;
+    }
+}

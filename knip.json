@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["src/sw.ts", "src/**/*.spec.ts", "src/**/__tests__/**/*.ts", "e2e/**/*.ts"],
+  "project": ["src/**/*.{ts,vue}"],
+  "ignore": [],
+  "ignoreBinaries": [],
+  "ignoreDependencies": ["@testing-library/vue"],
+  "ignoreExportsUsedInFile": true,
+  "rules": {
+    "exports": "warn",
+    "unresolved": "warn"
+  }
+}

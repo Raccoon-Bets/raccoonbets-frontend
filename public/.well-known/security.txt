@@ -1,0 +1,3 @@
+Contact: mailto:git@timothymorgan.info
+Expires: 2027-06-11T00:00:00Z
+Preferred-Languages: en

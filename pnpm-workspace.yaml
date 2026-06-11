@@ -1,0 +1,11 @@
+allowBuilds:
+  '@parcel/watcher': true
+  vue-demi: true
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - vue-demi
+# ts-results' CJS build requires tslib but doesn't declare it.
+packageExtensions:
+  ts-results:
+    dependencies:
+      tslib: '*'
