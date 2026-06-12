@@ -30,20 +30,29 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .skip-link {
+  // Visually hidden until keyboard-focused — clipped to a 1px box rather
+  // than parked offscreen, so rubber-band overscroll can't reveal it.
   position: absolute;
-  top: -40px;
+  top: 0;
   left: 0;
   z-index: 1000;
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-weight: 600;
-  color: var(--p-text-color);
-  background: var(--p-content-background);
-  border: 1px solid var(--p-content-border-color);
-  border-radius: 0 0 var(--p-content-border-radius);
-  transition: top 0.15s ease;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
 
   &:focus {
-    top: 0;
+    width: auto;
+    height: auto;
+    padding: var(--spacing-sm) var(--spacing-md);
+    overflow: visible;
+    clip-path: none;
+    font-weight: 600;
+    color: var(--p-text-color);
+    background: var(--p-content-background);
+    border: 1px solid var(--p-content-border-color);
+    border-radius: 0 0 var(--p-content-border-radius);
     outline: 2px solid var(--p-primary-color);
     outline-offset: 2px;
   }
