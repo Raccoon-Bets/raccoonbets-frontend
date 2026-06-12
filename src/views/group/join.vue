@@ -5,7 +5,6 @@ import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import config from '@/config'
-import requireAuth from '@/composables/requireAuth'
 import useFormErrorHandling from '@/composables/useFormErrorHandling'
 import RaccoonMascot from '@/components/mascot/raccoonMascot.vue'
 import StickerCard from '@/components/sticker/stickerCard.vue'
@@ -14,12 +13,12 @@ import { useAuthStore } from '@/stores/modules/auth'
 import { useGroupStore } from '@/stores/modules/group'
 import { groupPath } from '@/stores/modules/root'
 import { clearJoinIntent, consumeJoinIntent } from '@/utils/joinIntent'
+import { rememberReturnTo } from '@/utils/returnTo'
 
 const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 const groupStore = useGroupStore()
-requireAuth()
 
 const preview = computed(() => groupStore.groupPreview)
 
@@ -28,14 +27,15 @@ const { submitHandler, errors, error, isProcessing } = useFormErrorHandling(
   () => undefined,
 )
 
-// The join view is for authenticated non-members: members go straight to
-// the feed, and unknown slugs to the missing-group view. A non-member whose
-// signup started on this subdomain carries a join intent, which submits the
-// request for them once the preview loads (the flag is consumed first, so
-// re-runs of this effect can't double-submit).
+// The join view doubles as the logged-out landing page for an invite link:
+// visitors see the group's name and pick login or signup, both of which
+// return here. Members go straight to the feed, unknown slugs to the
+// missing-group view. A non-member whose signup started on this subdomain
+// carries a join intent, which submits the request for them once the preview
+// loads (the flag is consumed first, so re-runs of this effect can't
+// double-submit).
 onMounted(() => {
   watchEffect(() => {
-    if (!authStore.loggedIn) return // requireAuth handles the redirect
     if (groupStore.groupNotFound) {
       void router.replace({ name: 'groupMissing' })
       return
@@ -46,12 +46,23 @@ onMounted(() => {
       return
     }
     if (groupStore.groupPreview !== null) {
-      if (consumeJoinIntent() && !groupStore.groupPreview.joinRequested) void submitHandler()
+      if (
+        authStore.loggedIn &&
+        consumeJoinIntent() &&
+        !groupStore.groupPreview.joinRequested
+      ) {
+        void submitHandler()
+      }
       return
     }
     void groupStore.ensureLoaded()
   })
 })
+
+async function goToAuth(name: 'logIn' | 'signUp'): Promise<void> {
+  rememberReturnTo('/join')
+  await router.push({ name })
+}
 
 const errorList = computed(() => Object.values(errors.value).flat())
 
@@ -76,8 +87,27 @@ const URL = config.APIURL + groupPath('/join_requests')
         <p class="group-name">{{ preview.name }}</p>
         <p>{{ t('join.memberCount', preview.memberCount) }}</p>
 
+        <template v-if="!authStore.loggedIn">
+          <p>{{ t('join.loggedOutPrompt') }}</p>
+          <div class="actions">
+            <Button
+              type="button"
+              :label="t('join.logInButton')"
+              data-testid="join-login-button"
+              @click="goToAuth('logIn')"
+            />
+            <Button
+              type="button"
+              severity="secondary"
+              :label="t('join.signUpButton')"
+              data-testid="join-signup-button"
+              @click="goToAuth('signUp')"
+            />
+          </div>
+        </template>
+
         <Message
-          v-if="preview.joinRequested"
+          v-else-if="preview.joinRequested"
           severity="success"
           class="inline-message"
           data-testid="join-requested"
@@ -132,5 +162,11 @@ const URL = config.APIURL + groupPath('/join_requests')
   font-size: 1.25rem;
   font-weight: 800;
   margin: 0 0 var(--spacing-xs);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
 }
 </style>

@@ -388,6 +388,9 @@ const en: LocaleMessage<VueMessageType> = {
   join: {
     title: 'Join {group}',
     memberCount: 'no members | 1 member | {count} members',
+    loggedOutPrompt: 'Log in or sign up to ask to join.',
+    logInButton: 'Log in',
+    signUpButton: 'Sign up',
     requestButton: 'Request to join',
     requested: 'You’re in line — a group admin needs to approve your request.',
     error: 'Couldn’t send your request: {error}',
