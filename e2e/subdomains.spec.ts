@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures'
-import { ADMIN, GROUP_URL, logInOnApex, PASSWORD } from './helpers'
+import { ADMIN, GROUP_URL, logInOnApex, PASSWORD, submitAndConfirm } from './helpers'
 
 // Subdomain edge cases: unknown slugs route to the missing-group view, the
 // group-creation form blocks bad/reserved/taken addresses, and a logged-out
@@ -75,10 +75,11 @@ test.describe('Subdomains: unknown slugs, availability, login redirects', () => 
 
     await page.getByTestId('login-email').fill(ADMIN.email)
     await page.getByTestId('login-password').fill(PASSWORD)
-    await page.getByTestId('login-submit').click()
 
     // Login on a group host routes straight to that group's feed.
-    await page.waitForURL(`${GROUP_URL}/`)
+    await submitAndConfirm(page.getByTestId('login-submit'), async () => {
+      await page.waitForURL(`${GROUP_URL}/`, { timeout: 5000 })
+    })
     await expect(page.getByTestId('feed-title')).toBeVisible()
   })
 })

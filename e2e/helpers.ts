@@ -10,14 +10,56 @@ export const PASSWORD = 'supersecret'
 
 const API_HOST = 'http://127.0.0.1:5000'
 
+/** How long a Turnstile-gated submit must stay enabled before a click is trusted. */
+const TURNSTILE_SETTLE_MS = 500
+
+/**
+ * Clicks a Turnstile-gated submit once it has stayed continuously enabled for
+ * {@link TURNSTILE_SETTLE_MS}. The widget re-issues its token shortly after first enabling the
+ * button, and a click landing in that brief re-disabled window is silently swallowed by the
+ * browser (disabled controls receive no mouse events).
+ */
+export async function clickTurnstileSubmit(submit: Locator): Promise<void> {
+  const deadline = Date.now() + 15_000
+  let enabledSince: number | null = null
+  while (enabledSince === null || Date.now() - enabledSince < TURNSTILE_SETTLE_MS) {
+    if (Date.now() > deadline) throw new Error('Turnstile-gated submit never settled enabled')
+    enabledSince = (await submit.isEnabled()) ? (enabledSince ?? Date.now()) : null
+    await submit.page().waitForTimeout(50)
+  }
+  await submit.click()
+}
+
+/**
+ * Clicks a Turnstile-gated submit and waits for `confirmed` to acknowledge the result,
+ * re-clicking in case a click was still swallowed by a token re-issue. The final attempt
+ * propagates its own failure.
+ */
+export async function submitAndConfirm(
+  submit: Locator,
+  confirmed: () => Promise<void>,
+): Promise<void> {
+  for (let attempt = 1; attempt < 3; attempt++) {
+    await clickTurnstileSubmit(submit)
+    try {
+      await confirmed()
+      return
+    } catch {
+      // The click may still have been swallowed; settle and try again.
+    }
+  }
+  await clickTurnstileSubmit(submit)
+  await confirmed()
+}
+
 /** Logs in on the group subdomain and waits for the feed to load. */
 export async function logInToGroup(page: Page, email: string): Promise<void> {
   await page.goto(`${GROUP_URL}/login`)
   await page.getByTestId('login-email').fill(email)
   await page.getByTestId('login-password').fill(PASSWORD)
-  // click() waits for the element to be enabled (Turnstile gates the submit).
-  await page.getByTestId('login-submit').click()
-  await expect(page.getByTestId('feed-title')).toBeVisible()
+  await submitAndConfirm(page.getByTestId('login-submit'), async () => {
+    await expect(page.getByTestId('feed-title')).toBeVisible({ timeout: 5000 })
+  })
 }
 
 /** Logs in on the apex and waits to land on the groups page. */
@@ -29,8 +71,9 @@ export async function logInOnApex(
   await page.goto(`${APEX_URL}/login`)
   await page.getByTestId('login-email').fill(email)
   await page.getByTestId('login-password').fill(password)
-  await page.getByTestId('login-submit').click()
-  await page.waitForURL(`${APEX_URL}/groups`)
+  await submitAndConfirm(page.getByTestId('login-submit'), async () => {
+    await page.waitForURL(`${APEX_URL}/groups`, { timeout: 5000 })
+  })
 }
 
 /**
@@ -50,8 +93,9 @@ export async function signUpAndVerify(page: Page, name: string, email: string): 
   await page.getByTestId('signup-name').fill(name)
   await page.getByTestId('signup-email').fill(email)
   await page.getByTestId('signup-password').fill(PASSWORD)
-  await page.getByTestId('signup-submit').click()
-  await expect(page.getByTestId('signup-success')).toBeVisible()
+  await submitAndConfirm(page.getByTestId('signup-submit'), async () => {
+    await expect(page.getByTestId('signup-success')).toBeVisible({ timeout: 5000 })
+  })
 
   const verification = await fetchLastEmail()
   expect(verification).not.toBeNull()

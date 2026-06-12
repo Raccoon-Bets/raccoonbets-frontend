@@ -5,6 +5,8 @@ import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
 import type { MenuMethods } from 'primevue/menu'
+import config from '@/config'
+import { isApex } from '@/config/tenant'
 import { notifySentry } from '@/utils/errors'
 import { useAuthStore } from '@/stores/modules/auth'
 
@@ -26,7 +28,20 @@ async function logOut(): Promise<void> {
   await router.push({ name: 'logIn' })
 }
 
+// Accounts are global, so settings live on the apex app; from a group
+// subdomain this is a cross-origin link and a full navigation.
+const accountURL = `${window.location.protocol}//${config.apexDomain}${window.location.port ? `:${window.location.port}` : ''}/account`
+
 const items = computed(() => [
+  ...(isApex
+    ? []
+    : [
+        {
+          label: t('userMenu.accountSettings'),
+          url: accountURL,
+          testid: 'account-settings-link',
+        },
+      ]),
   {
     label: t('userMenu.logOut'),
     testid: 'logout-button',
@@ -51,7 +66,7 @@ const items = computed(() => [
     />
     <Menu id="user-menu-items" ref="menu" :model="items" popup>
       <template #item="{ item, props }">
-        <a v-bind="props.action" :data-testid="item.testid">{{ item.label }}</a>
+        <a v-bind="props.action" :href="item.url" :data-testid="item.testid">{{ item.label }}</a>
       </template>
     </Menu>
   </div>

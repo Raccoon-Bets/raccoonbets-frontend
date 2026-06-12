@@ -1,5 +1,13 @@
 import { test, expect } from './fixtures'
-import { ADMIN, GROUP_URL, logInToGroup, logOut, PASSWORD, signUpAndRequestToJoin } from './helpers'
+import {
+  ADMIN,
+  GROUP_URL,
+  logInToGroup,
+  logOut,
+  PASSWORD,
+  signUpAndRequestToJoin,
+  submitAndConfirm,
+} from './helpers'
 
 // Join requests: a verified non-member finds the group's subdomain, requests
 // to join, and an admin approves or denies from the members page.
@@ -52,8 +60,9 @@ test.describe('Join requests: request → approve / deny', () => {
     await page.goto(`${GROUP_URL}/login`)
     await page.getByTestId('login-email').fill(requester.email)
     await page.getByTestId('login-password').fill(PASSWORD)
-    await page.getByTestId('login-submit').click()
-    await page.waitForURL(`${GROUP_URL}/join`)
+    await submitAndConfirm(page.getByTestId('login-submit'), async () => {
+      await page.waitForURL(`${GROUP_URL}/join`, { timeout: 5000 })
+    })
     await expect(page.getByTestId('join-request-button')).toBeVisible()
   })
 })

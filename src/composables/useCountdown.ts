@@ -29,14 +29,43 @@ export function countdownParts(remainingMS: number): CountdownParts | null {
   }
 }
 
+/** Display urgency of a deadline, driving the "Locks in" pill's tone. */
+export type CountdownUrgency = 'normal' | 'warning' | 'alert'
+
+const HOUR_MS = 3_600_000
+const DAY_MS = 24 * HOUR_MS
+
 /**
- * A live countdown to a deadline, as a localized string at day/hour/minute granularity (e.g.
- * `2d 5h`, `45m`). Once the deadline passes it reads "locked".
+ * Buckets a remaining duration by how soon it expires: `alert` under an hour, `warning` under a
+ * day, and `normal` at 24 hours or more.
+ *
+ * @param remainingMS The milliseconds until the deadline.
+ * @returns The urgency bucket. Elapsed deadlines (`remainingMS` ≤ 0) return `alert`, but callers
+ * hide the countdown pill entirely once a market locks.
+ */
+export function urgency(remainingMS: number): CountdownUrgency {
+  if (remainingMS < HOUR_MS) return 'alert'
+  if (remainingMS < DAY_MS) return 'warning'
+  return 'normal'
+}
+
+/** The reactive pieces of a live countdown. */
+export interface Countdown {
+  /** Localized remaining time at day/hour/minute granularity (e.g. `2d 5h`, `45m`); reads "locked" once the deadline passes. */
+  countdown: ComputedRef<string>
+
+  /** How urgently the deadline looms; see {@link urgency}. */
+  urgency: ComputedRef<CountdownUrgency>
+}
+
+/**
+ * A live countdown to a deadline: a localized remaining-time string plus an urgency bucket for
+ * styling, both driven by one shared ticker.
  *
  * @param deadline The instant counted down to (a ref, getter, or plain Date).
- * @returns The reactive countdown string.
+ * @returns The reactive countdown text and urgency.
  */
-export default function useCountdown(deadline: MaybeRefOrGetter<Date>): ComputedRef<string> {
+export default function useCountdown(deadline: MaybeRefOrGetter<Date>): Countdown {
   const { now, pause, resume } = useNow({ interval: TICK_MS, controls: true })
 
   // No point ticking once the deadline has passed; resume if it moves into the
@@ -46,12 +75,17 @@ export default function useCountdown(deadline: MaybeRefOrGetter<Date>): Computed
     else resume()
   })
 
-  return computed(() => {
-    const parts = countdownParts(toValue(deadline).getTime() - now.value.getTime())
-    if (parts === null) return global.t('countdown.locked')
-    const { days, hours, minutes } = parts
-    if (days > 0) return global.t('countdown.daysHours', { days, hours })
-    if (hours > 0) return global.t('countdown.hoursMinutes', { hours, minutes })
-    return global.t('countdown.minutes', { minutes })
-  })
+  const remainingMS = computed(() => toValue(deadline).getTime() - now.value.getTime())
+
+  return {
+    countdown: computed(() => {
+      const parts = countdownParts(remainingMS.value)
+      if (parts === null) return global.t('countdown.locked')
+      const { days, hours, minutes } = parts
+      if (days > 0) return global.t('countdown.daysHours', { days, hours })
+      if (hours > 0) return global.t('countdown.hoursMinutes', { hours, minutes })
+      return global.t('countdown.minutes', { minutes })
+    }),
+    urgency: computed(() => urgency(remainingMS.value)),
+  }
 }

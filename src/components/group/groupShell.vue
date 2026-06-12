@@ -81,14 +81,16 @@ const navItems = computed<NavItem[]>(() => [
 .wordmark {
   display: flex;
   gap: var(--spacing-sm);
-  align-items: center;
+  align-items: flex-end;
 
   h1 {
     margin: 0;
+    line-height: 1;
   }
 
   small {
     display: block;
+    margin-top: 2px;
     font-family: var(--rb-font-body);
     line-height: 1;
   }

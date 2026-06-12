@@ -1,7 +1,7 @@
 <script setup lang="ts">
 interface Props {
   /** The badge color. */
-  tone?: 'primary' | 'positive' | 'negative' | 'info' | 'muted'
+  tone?: 'primary' | 'positive' | 'negative' | 'info' | 'muted' | 'warning' | 'alert'
 
   /** Rotation in degrees (stickers sit slightly tilted). */
   tilt?: number
@@ -47,6 +47,16 @@ const props = withDefaults(defineProps<Props>(), {
   &.negative {
     color: var(--rb-negative-ink);
     background: var(--rb-negative-bg);
+  }
+
+  &.warning {
+    color: var(--rb-warning-ink);
+    background: var(--rb-warning-bg);
+  }
+
+  &.alert {
+    color: var(--rb-alert-ink);
+    background: var(--rb-alert-bg);
   }
 
   &.info {

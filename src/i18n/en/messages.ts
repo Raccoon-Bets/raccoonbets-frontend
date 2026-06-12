@@ -167,6 +167,7 @@ const en: LocaleMessage<VueMessageType> = {
     loadError: 'Couldn’t load this group: {error}',
   },
   userMenu: {
+    accountSettings: 'Account settings',
     logOut: 'Log out',
   },
   feed: {

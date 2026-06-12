@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { countdownParts } from '@/composables/useCountdown'
+import { countdownParts, urgency } from '@/composables/useCountdown'
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
@@ -25,5 +25,23 @@ describe('countdownParts', () => {
       hours: 2,
       minutes: 30,
     })
+  })
+})
+
+describe('urgency', () => {
+  it('is normal at and above 24 hours', () => {
+    expect(urgency(DAY)).toBe('normal')
+    expect(urgency(2 * DAY)).toBe('normal')
+  })
+
+  it('is warning under 24 hours down to exactly 1 hour', () => {
+    expect(urgency(DAY - 1)).toBe('warning')
+    expect(urgency(HOUR)).toBe('warning')
+  })
+
+  it('is alert under 1 hour', () => {
+    expect(urgency(HOUR - 1)).toBe('alert')
+    expect(urgency(MINUTE)).toBe('alert')
+    expect(urgency(0)).toBe('alert')
   })
 })

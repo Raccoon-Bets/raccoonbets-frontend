@@ -16,7 +16,7 @@ import OutcomeRow from '@/components/sticker/outcomeRow.vue'
 import StickerBadge from '@/components/sticker/stickerBadge.vue'
 import StickerCard from '@/components/sticker/stickerCard.vue'
 import useChannel, { channelEventSchema } from '@/composables/useChannel'
-import useCountdown from '@/composables/useCountdown'
+import useCountdown, { type CountdownUrgency } from '@/composables/useCountdown'
 import useFormErrorHandling from '@/composables/useFormErrorHandling'
 import useGroupGuard from '@/composables/useGroupGuard'
 import useMoney from '@/composables/useMoney'
@@ -67,7 +67,15 @@ const market = computed(() =>
 useCanonicalMarketURL(() => market.value)
 
 const { format } = useMoney()
-const countdown = useCountdown(() => market.value?.locksAt ?? new Date(0))
+const { countdown, urgency } = useCountdown(() => market.value?.locksAt ?? new Date(0))
+
+// Normal urgency keeps the pill on brand; warning/alert escalate as lock approaches.
+const LOCK_PILL_TONES: Record<CountdownUrgency, 'primary' | 'warning' | 'alert'> = {
+  normal: 'primary',
+  warning: 'warning',
+  alert: 'alert',
+}
+const lockPillTone = computed(() => LOCK_PILL_TONES[urgency.value])
 
 const outcomeNames = computed(() => {
   const names = new Map<number, string>()
@@ -286,7 +294,7 @@ const editURL = config.APIURL + groupPath(`/markets/${String(marketId.value)}`)
 
       <template v-if="market !== null">
         <sticker-card class="detail-section">
-          <sticker-badge v-if="openForTrading" tone="primary" overlap>
+          <sticker-badge v-if="openForTrading" :tone="lockPillTone" overlap>
             {{ t('market.locksIn', { countdown }) }}
           </sticker-badge>
 

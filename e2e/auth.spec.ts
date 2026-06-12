@@ -1,5 +1,5 @@
 import { test, expect, fetchLastEmail, extractEmailPath } from './fixtures'
-import { ADMIN, APEX_URL, logInOnApex, PASSWORD } from './helpers'
+import { ADMIN, APEX_URL, logInOnApex, PASSWORD, submitAndConfirm } from './helpers'
 
 // Auth flows beyond Flow A's signup: session lifecycle (login → logout →
 // protected pages bounce), bad credentials, and the full password-reset loop.
@@ -44,8 +44,9 @@ test.describe('Auth: login, logout, and password reset', () => {
     // ── Request the reset link ───────────────────────────────────────────
     await page.goto(`${APEX_URL}/forgot-password`)
     await page.getByTestId('forgot-password-email').fill(ADMIN.email)
-    await page.getByTestId('forgot-password-submit').click()
-    await expect(page.getByTestId('forgot-password-success')).toBeVisible()
+    await submitAndConfirm(page.getByTestId('forgot-password-submit'), async () => {
+      await expect(page.getByTestId('forgot-password-success')).toBeVisible({ timeout: 5000 })
+    })
 
     // ── Follow the emailed link and choose a new password ────────────────
     const email = await fetchLastEmail()

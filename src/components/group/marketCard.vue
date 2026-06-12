@@ -5,7 +5,7 @@ import type { Market } from '@/types'
 import OutcomeRow from '@/components/sticker/outcomeRow.vue'
 import StickerBadge from '@/components/sticker/stickerBadge.vue'
 import StickerCard from '@/components/sticker/stickerCard.vue'
-import useCountdown from '@/composables/useCountdown'
+import useCountdown, { type CountdownUrgency } from '@/composables/useCountdown'
 import useMoney from '@/composables/useMoney'
 import { global } from '@/i18n'
 import { formatMultiplier, payoutMultiplier } from '@/utils/parimutuel'
@@ -20,7 +20,15 @@ const props = defineProps<Props>()
 
 const { t } = useI18n()
 const { format } = useMoney()
-const countdown = useCountdown(() => props.market.locksAt)
+const { countdown, urgency } = useCountdown(() => props.market.locksAt)
+
+// Normal urgency keeps the pill on brand; warning/alert escalate as lock approaches.
+const LOCK_PILL_TONES: Record<CountdownUrgency, 'primary' | 'warning' | 'alert'> = {
+  normal: 'primary',
+  warning: 'warning',
+  alert: 'alert',
+}
+const lockPillTone = computed(() => LOCK_PILL_TONES[urgency.value])
 
 const openForTrading = computed(() => props.market.status === 'open' && !props.market.locked)
 const badge = computed(() =>
@@ -57,7 +65,7 @@ function multiplierFor(poolCents: number): string | null {
     :class="{ voided: market.status === 'voided' }"
     :data-testid="`market-card-${market.id}`"
   >
-    <sticker-badge v-if="openForTrading" tone="primary" overlap>
+    <sticker-badge v-if="openForTrading" :tone="lockPillTone" overlap>
       {{ t('market.locksIn', { countdown }) }}
     </sticker-badge>
     <sticker-badge v-else :tone="badgeTone" overlap>

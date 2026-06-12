@@ -73,7 +73,7 @@ watch([market, () => groupStore.membership], ([loaded, membership]) => {
   }
 })
 
-const countdown = useCountdown(() => market.value?.locksAt ?? new Date(0))
+const { countdown } = useCountdown(() => market.value?.locksAt ?? new Date(0))
 
 const winnerName = computed(() => {
   const winnerId = market.value?.winningOutcomeId ?? null

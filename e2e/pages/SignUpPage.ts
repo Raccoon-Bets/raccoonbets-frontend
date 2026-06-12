@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test'
+import { clickTurnstileSubmit } from '../helpers'
 
 export class SignUpPage {
   constructor(private readonly page: Page) {}
@@ -21,7 +22,6 @@ export class SignUpPage {
   }
 
   async submit(): Promise<void> {
-    // click() waits for the element to be enabled (Turnstile gates the submit).
-    await this.page.getByTestId('signup-submit').click()
+    await clickTurnstileSubmit(this.page.getByTestId('signup-submit'))
   }
 }
