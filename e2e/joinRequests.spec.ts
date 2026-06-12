@@ -6,6 +6,7 @@ import {
   logOut,
   PASSWORD,
   signUpAndRequestToJoin,
+  signUpAndVerify,
   submitAndConfirm,
 } from './helpers'
 
@@ -74,12 +75,12 @@ test.describe('Join requests: invite link', () => {
   }) => {
     const joiner = { name: 'Invited Friend', email: 'invited@example.com' }
 
-    // ── The logged-out invite-link visit bounces to the subdomain login ──
+    // ── The logged-out invite-link visit lands on the branded join page ──
     await page.goto(`${GROUP_URL}/join`)
-    await page.waitForURL(`${GROUP_URL}/login`)
+    await expect(page.getByText('Cypress Den', { exact: true })).toBeVisible()
 
-    // ── The visitor signs up instead, staying on the subdomain ───────────
-    await page.getByRole('link', { name: 'Need an account? Sign up' }).click()
+    // ── The visitor picks signup, staying on the subdomain ───────────────
+    await page.getByTestId('join-signup-button').click()
     await page.waitForURL(`${GROUP_URL}/signup`)
     await page.getByTestId('signup-name').fill(joiner.name)
     await page.getByTestId('signup-email').fill(joiner.email)
@@ -112,5 +113,30 @@ test.describe('Join requests: invite link', () => {
     await expect(
       page.getByTestId('join-requests').locator('li', { hasText: joiner.name }),
     ).toBeVisible()
+  })
+
+  test('a logged-out visitor can log in from the join page and request to join', async ({
+    page,
+    resetDatabase: _reset,
+  }) => {
+    const visitor = { name: 'Returning Friend', email: 'returning@example.com' }
+    await signUpAndVerify(page, visitor.name, visitor.email)
+
+    // ── The branded join page shows the group and offers both paths ──────
+    await page.goto(`${GROUP_URL}/join`)
+    await expect(page.getByText('Cypress Den', { exact: true })).toBeVisible()
+    await expect(page.getByText('2 members')).toBeVisible()
+    await expect(page.getByTestId('join-signup-button')).toBeVisible()
+
+    // ── Logging in returns to the join page, ready to request ────────────
+    await page.getByTestId('join-login-button').click()
+    await page.waitForURL(`${GROUP_URL}/login`)
+    await page.getByTestId('login-email').fill(visitor.email)
+    await page.getByTestId('login-password').fill(PASSWORD)
+    await submitAndConfirm(page.getByTestId('login-submit'), async () => {
+      await page.waitForURL(`${GROUP_URL}/join`, { timeout: 5000 })
+    })
+    await page.getByTestId('join-request-button').click()
+    await expect(page.getByTestId('join-requested')).toBeVisible()
   })
 })
