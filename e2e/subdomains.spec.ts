@@ -66,20 +66,20 @@ test.describe('Subdomains: unknown slugs, availability, login redirects', () => 
     await expect(subdomain).toHaveValue('sneaky-squirrels')
   })
 
-  test('a logged-out group visit redirects to login on the subdomain, then the feed', async ({
+  test('a logged-out group visit redirects to login on the subdomain, then back to the intended page', async ({
     page,
     resetDatabase: _reset,
   }) => {
-    await page.goto(`${GROUP_URL}/`)
+    await page.goto(`${GROUP_URL}/members`)
     await page.waitForURL(`${GROUP_URL}/login`)
 
     await page.getByTestId('login-email').fill(ADMIN.email)
     await page.getByTestId('login-password').fill(PASSWORD)
 
-    // Login on a group host routes straight to that group's feed.
+    // Login on a group host with a return-to path goes back to that page.
     await submitAndConfirm(page.getByTestId('login-submit'), async () => {
-      await page.waitForURL(`${GROUP_URL}/`, { timeout: 5000 })
+      await page.waitForURL(`${GROUP_URL}/members`, { timeout: 5000 })
     })
-    await expect(page.getByTestId('feed-title')).toBeVisible()
+    await expect(page.getByTestId('members-roster')).toBeVisible()
   })
 })

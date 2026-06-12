@@ -3,8 +3,8 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import Message from 'primevue/message'
-import { isApex } from '@/config/tenant'
 import { notifySentry } from '@/utils/errors'
+import { afterAuthRoute } from '@/utils/returnTo'
 import { useAuthStore } from '@/stores/modules/auth'
 import { useAccountStore } from '@/stores/modules/account'
 import AuthCard from '@/components/authCard.vue'
@@ -34,7 +34,7 @@ onMounted(async () => {
   // Unlike password login, the OAuth redirect carries no user profile, so load
   // it before entering the app.
   await accountStore.loadAccount()
-  await router.push({ name: isApex ? 'groups' : 'feed' }).catch(notifySentry)
+  await router.push(afterAuthRoute()).catch(notifySentry)
 })
 </script>
 

@@ -10,11 +10,11 @@ import {
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import config from '@/config'
-import { isApex } from '@/config/tenant'
 import FormField from '@/components/formField.vue'
 import Turnstile from '@/components/turnstile.vue'
 import useFormErrorHandling from '@/composables/useFormErrorHandling'
 import { errorToString } from '@/utils/errors'
+import { afterAuthRoute } from '@/utils/returnTo'
 import { useAuthStore } from '@/stores/modules/auth'
 import { usePasskeysStore } from '@/stores/modules/passkeys'
 import AuthCard from '@/components/authCard.vue'
@@ -32,13 +32,11 @@ const session = reactive({
 const turnstileToken = ref('')
 const turnstileRef = useTemplateRef<{ reset: () => void }>('turnstileRef')
 
-const afterLoginRoute = { name: isApex ? 'groups' : 'feed' }
-
 const URL = `${config.APIURL}/login`
 const { submitHandler, errors, error, isProcessing } = useFormErrorHandling<unknown>(
   () => authStore.logIn({ ...session, turnstile_token: turnstileToken.value }),
   async () => {
-    await router.push(afterLoginRoute)
+    await router.push(afterAuthRoute())
   },
   () => {
     session.password = ''
@@ -59,7 +57,7 @@ async function logInWithPasskey(): Promise<void> {
     // The explicit button replaces any pending autofill ceremony with the
     // modal picker; startAuthentication aborts the conditional UI itself.
     const result = await passkeysStore.logIn({ useBrowserAutofill: false })
-    if (result.ok) await router.push(afterLoginRoute)
+    if (result.ok) await router.push(afterAuthRoute())
     else passkeyError.value = Object.values(result.val).flat().join(', ')
   } catch (err) {
     // A dismissed picker rejects too; that's not worth surfacing loudly,
@@ -72,7 +70,7 @@ onMounted(async () => {
   if (!(await browserSupportsWebAuthnAutofill())) return
   try {
     const result = await passkeysStore.logIn({ useBrowserAutofill: true })
-    if (result.ok) await router.push(afterLoginRoute)
+    if (result.ok) await router.push(afterAuthRoute())
   } catch {
     // Autofill rejects when the user dismisses it, navigates away, or
     // submits the password form. None of these are errors worth surfacing.

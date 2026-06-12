@@ -4,9 +4,11 @@ import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import config from '@/config'
+import { isApex } from '@/config/tenant'
 import FormField from '@/components/formField.vue'
 import Turnstile from '@/components/turnstile.vue'
 import useFormErrorHandling from '@/composables/useFormErrorHandling'
+import { rememberJoinIntent } from '@/utils/joinIntent'
 import { useAccountStore } from '@/stores/modules/account'
 import { global } from '@/i18n'
 import type { SupportedLocale } from '@/i18n/locales'
@@ -34,6 +36,9 @@ const { submitHandler, errors, error, isProcessing } = useFormErrorHandling(
       turnstile_token: turnstileToken.value,
     }),
   () => {
+    // A signup from a group's subdomain implies wanting in: the join view
+    // auto-submits the request on the first authenticated visit back.
+    if (!isApex) rememberJoinIntent()
     signedUpEmail.value = user.login
   },
   () => {

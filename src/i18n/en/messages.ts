@@ -389,7 +389,7 @@ const en: LocaleMessage<VueMessageType> = {
     title: 'Join {group}',
     memberCount: 'no members | 1 member | {count} members',
     requestButton: 'Request to join',
-    requested: 'Your request to join is pending an admin’s approval.',
+    requested: 'You’re in line — a group admin needs to approve your request.',
     error: 'Couldn’t send your request: {error}',
   },
   groupMissing: {

@@ -55,21 +55,23 @@ export async function fetchLastEmail(): Promise<{
   return { html: parsed.html ?? '', text: parsed.text ?? '' }
 }
 
+/** Extracts the first link from an email body as an absolute URL. */
+export function extractEmailURL(body: { html: string; text: string }): string {
+  // Try an HTML anchor first, then fall back to any URL in the plain-text body.
+  const hrefMatch = /href="([^"]+)"/.exec(body.html)
+  if (hrefMatch) return hrefMatch[1]
+
+  const urlMatch = /https?:\/\/\S+/.exec(body.text || body.html)
+  if (!urlMatch) throw new Error('No link found in email')
+  return urlMatch[0]
+}
+
 /**
  * Extracts the first link from an email body as a path + query relative to `baseURL`, so the
  * test can follow it regardless of which frontend host the backend was configured with.
  */
 export function extractEmailPath(body: { html: string; text: string }, baseURL: string): string {
-  // Try an HTML anchor first, then fall back to any URL in the plain-text body.
-  const hrefMatch = /href="([^"]+)"/.exec(body.html)
-  if (hrefMatch) {
-    const url = new URL(hrefMatch[1], baseURL)
-    return url.pathname + url.search
-  }
-
-  const urlMatch = /https?:\/\/\S+/.exec(body.text || body.html)
-  if (!urlMatch) throw new Error('No link found in email')
-  const url = new URL(urlMatch[0], baseURL)
+  const url = new URL(extractEmailURL(body), baseURL)
   return url.pathname + url.search
 }
 

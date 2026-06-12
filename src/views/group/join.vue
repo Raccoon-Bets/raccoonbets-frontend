@@ -13,6 +13,7 @@ import UserMenu from '@/components/userMenu.vue'
 import { useAuthStore } from '@/stores/modules/auth'
 import { useGroupStore } from '@/stores/modules/group'
 import { groupPath } from '@/stores/modules/root'
+import { clearJoinIntent, consumeJoinIntent } from '@/utils/joinIntent'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -20,8 +21,18 @@ const authStore = useAuthStore()
 const groupStore = useGroupStore()
 requireAuth()
 
-// The join view is for authenticated non-members: members go straight to the
-// feed, and unknown slugs to the missing-group view.
+const preview = computed(() => groupStore.groupPreview)
+
+const { submitHandler, errors, error, isProcessing } = useFormErrorHandling(
+  () => groupStore.requestToJoin(),
+  () => undefined,
+)
+
+// The join view is for authenticated non-members: members go straight to
+// the feed, and unknown slugs to the missing-group view. A non-member whose
+// signup started on this subdomain carries a join intent, which submits the
+// request for them once the preview loads (the flag is consumed first, so
+// re-runs of this effect can't double-submit).
 onMounted(() => {
   watchEffect(() => {
     if (!authStore.loggedIn) return // requireAuth handles the redirect
@@ -30,19 +41,17 @@ onMounted(() => {
       return
     }
     if (groupStore.isMember) {
+      clearJoinIntent()
       void router.replace({ name: 'feed' })
+      return
+    }
+    if (groupStore.groupPreview !== null) {
+      if (consumeJoinIntent() && !groupStore.groupPreview.joinRequested) void submitHandler()
       return
     }
     void groupStore.ensureLoaded()
   })
 })
-
-const preview = computed(() => groupStore.groupPreview)
-
-const { submitHandler, errors, error, isProcessing } = useFormErrorHandling(
-  () => groupStore.requestToJoin(),
-  () => undefined,
-)
 
 const errorList = computed(() => Object.values(errors.value).flat())
 
