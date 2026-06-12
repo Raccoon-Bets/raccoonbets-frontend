@@ -61,7 +61,7 @@ export interface Group {
   membership: GroupMembership | null
 }
 
-/** A minimal group preview shown to authenticated non-members (the join page). */
+/** A minimal group preview shown to non-members — including logged-out visitors (the join page). */
 export interface GroupPreview {
   /** The display name of the group. */
   name: string

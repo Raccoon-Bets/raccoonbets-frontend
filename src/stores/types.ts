@@ -46,7 +46,7 @@ export interface GroupState {
   /** The current group in full, when the viewer is an active member. */
   group: Group | null
 
-  /** The minimal preview, when the viewer is authenticated but not a member. */
+  /** The minimal preview, when the viewer is not a member (authenticated or logged out). */
   groupPreview: GroupPreview | null
 
   groupLoading: boolean

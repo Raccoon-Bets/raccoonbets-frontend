@@ -11,7 +11,6 @@ import {
   loadAPIResponseBodyOrThrowErrors,
 } from '@/stores/utils'
 import { notifySentry } from '@/utils/errors'
-import { useAuthStore } from '@/stores/modules/auth'
 
 const initialState: GroupState = {
   group: null,
@@ -24,7 +23,7 @@ const initialState: GroupState = {
 /**
  * The current group on a subdomain, booted once per page load. After
  * {@link useGroupStore.loadGroup} settles, exactly one of these holds: `group` (active member),
- * `groupPreview` (authenticated non-member), `groupNotFound` (no such group), or `groupError`.
+ * `groupPreview` (non-member or logged out), `groupNotFound` (no such group), or `groupError`.
  */
 export const useGroupStore = defineStore('group', {
   state: () => ({ ...initialState }),
@@ -61,14 +60,11 @@ export const useGroupStore = defineStore('group', {
     },
 
     /**
-     * Fetches the current group from the subdomain's slug. Does nothing if not
-     * logged in (the group show endpoint requires authentication).
+     * Fetches the current group from the subdomain's slug. Works logged out
+     * too: the backend serves the minimal preview to anonymous visitors.
      */
 
     async loadGroup(): Promise<void> {
-      const auth = useAuthStore()
-      if (!auth.loggedIn) return
-
       this.$patch({ ...initialState, groupLoading: true })
       try {
         const response = await requestJSON<unknown>({ method: 'GET', path: groupPath('') })
