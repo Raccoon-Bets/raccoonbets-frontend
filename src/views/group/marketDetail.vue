@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { Err, Ok, type Result } from 'ts-results'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import DatePicker from 'primevue/datepicker'
 import Message from 'primevue/message'
@@ -30,9 +30,12 @@ import { fromMinorUnits, toMinorUnits } from '@/utils/currency'
 import { formatMultiplier, payoutMultiplier } from '@/utils/parimutuel'
 import { marketPath } from '@/utils/marketURL'
 import useCanonicalMarketURL from '@/composables/useCanonicalMarketURL'
+import { errorToString, notifySentry } from '@/utils/errors'
+import type { Position } from '@/types'
 
 const { t, d } = useI18n()
 const route = useRoute()
+const router = useRouter()
 const groupStore = useGroupStore()
 const marketStore = useMarketStore()
 useGroupGuard()
@@ -113,16 +116,15 @@ function multiplierFor(poolCents: number): string | null {
   return multiplier === null ? null : formatMultiplier(multiplier, global.locale.value)
 }
 
-// ── Editing (creator only, while open) ────────────────────────────────
+// ── Editing (creator or admin, while open) ───────────────────────────
 
+const isAdmin = computed(() => groupStore.membership?.role === 'admin')
 const canEdit = computed(
   () =>
     market.value !== null &&
     market.value.status === 'open' &&
-    market.value.creator.id === groupStore.membership?.id,
+    (market.value.creator.id === groupStore.membership?.id || isAdmin.value),
 )
-// `locks_at` freezes once the first position lands; the backend rejects changes after that.
-const locksAtFrozen = computed(() => (market.value?.positions.length ?? 0) > 0)
 
 const editing = ref(false)
 const editForm = reactive({ title: '', description: '', locksAt: null as Date | null })
@@ -147,9 +149,7 @@ const {
       title: editForm.title,
       description: editForm.description,
     }
-    if (!locksAtFrozen.value && editForm.locksAt !== null) {
-      attributes.locks_at = editForm.locksAt.toISOString()
-    }
+    if (editForm.locksAt !== null) attributes.locks_at = editForm.locksAt.toISOString()
     return marketStore.updateMarket(attributes)
   },
   () => {
@@ -267,6 +267,54 @@ const baseErrors = computed(() =>
 )
 
 const isMyPosition = (memberId: number): boolean => memberId === groupStore.membership?.id
+
+// ── Admin tools: delete the market, cancel members' positions ─────────
+
+const canDelete = computed(() => isAdmin.value && market.value?.status === 'open')
+const deleteError = ref<string | null>(null)
+const isDeleting = ref(false)
+
+async function deleteMarket(): Promise<void> {
+  if (!window.confirm(t('marketDetail.deleteConfirm'))) return
+  deleteError.value = null
+  isDeleting.value = true
+  try {
+    const result = await marketStore.deleteMarket()
+    if (result.ok) {
+      await router.push({ name: 'feed' })
+    } else {
+      deleteError.value = Object.values(result.val).flat().join(', ')
+    }
+  } catch (error) {
+    notifySentry(error)
+    deleteError.value = errorToString(error)
+  }
+  isDeleting.value = false
+}
+
+const canCancelPosition = (memberId: number): boolean =>
+  isAdmin.value && openForTrading.value && !isMyPosition(memberId)
+
+const cancelPositionError = ref<string | null>(null)
+const isCancellingPosition = ref(false)
+
+async function cancelMemberPosition(position: Position): Promise<void> {
+  const warning = t('marketDetail.cancelPositionConfirm', {
+    name: position.member.name,
+    amount: format(position.amountCents, market.value?.currency ?? 'USD'),
+  })
+  if (!window.confirm(warning)) return
+  cancelPositionError.value = null
+  isCancellingPosition.value = true
+  try {
+    const result = await marketStore.cancelMemberPosition(position.id)
+    if (!result.ok) cancelPositionError.value = Object.values(result.val).flat().join(', ')
+  } catch (error) {
+    notifySentry(error)
+    cancelPositionError.value = errorToString(error)
+  }
+  isCancellingPosition.value = false
+}
 
 const URL = config.APIURL + groupPath(`/markets/${String(marketId.value)}/position`)
 const editURL = config.APIURL + groupPath(`/markets/${String(marketId.value)}`)
@@ -396,7 +444,6 @@ const editURL = config.APIURL + groupPath(`/markets/${String(marketId.value)}`)
                   show-time
                   hour-format="12"
                   date-format="yy-mm-dd"
-                  :disabled="locksAtFrozen"
                   required
                   fluid
                   :invalid="(editErrors.locks_at?.length ?? 0) > 0"
@@ -404,10 +451,6 @@ const editURL = config.APIURL + groupPath(`/markets/${String(marketId.value)}`)
                 />
                 <field-errors field="locks_at" :messages="editErrors.locks_at ?? []" />
               </div>
-              <p v-if="locksAtFrozen" class="hint" data-testid="market-edit-locks-frozen">
-                {{ t('marketDetail.locksAtFrozen') }}
-              </p>
-
               <div class="actions">
                 <Button
                   type="submit"
@@ -426,6 +469,27 @@ const editURL = config.APIURL + groupPath(`/markets/${String(marketId.value)}`)
               </div>
             </form>
           </section>
+
+          <Message
+            v-if="deleteError"
+            severity="error"
+            class="inline-message"
+            data-testid="market-delete-error"
+          >
+            {{ t('marketDetail.deleteError', { error: deleteError }) }}
+          </Message>
+          <p v-if="canDelete && !editing">
+            <Button
+              type="button"
+              severity="danger"
+              outlined
+              size="small"
+              :label="t('marketDetail.deleteLink')"
+              :disabled="isDeleting"
+              data-testid="market-delete"
+              @click="deleteMarket"
+            />
+          </p>
         </sticker-card>
 
         <sticker-card class="detail-section">
@@ -577,6 +641,14 @@ const editURL = config.APIURL + groupPath(`/markets/${String(marketId.value)}`)
 
         <sticker-card class="detail-section">
           <h2 class="section-head">{{ t('marketDetail.positionsTitle') }}</h2>
+          <Message
+            v-if="cancelPositionError"
+            severity="error"
+            class="inline-message"
+            data-testid="position-admin-cancel-error"
+          >
+            {{ t('marketDetail.cancelPositionError', { error: cancelPositionError }) }}
+          </Message>
           <p v-if="market.positions.length === 0" data-testid="positions-empty">
             {{ t('marketDetail.positionsEmpty') }}
           </p>
@@ -592,6 +664,17 @@ const editURL = config.APIURL + groupPath(`/markets/${String(marketId.value)}`)
               <small v-if="isMyPosition(position.member.id)">{{
                 t('marketDetail.myPositionTag')
               }}</small>
+              <Button
+                v-if="canCancelPosition(position.member.id)"
+                type="button"
+                size="small"
+                severity="danger"
+                outlined
+                :label="t('marketDetail.cancelPositionButton')"
+                :disabled="isCancellingPosition"
+                :data-testid="`position-${position.id}-admin-cancel`"
+                @click="cancelMemberPosition(position)"
+              />
             </li>
           </ul>
         </sticker-card>

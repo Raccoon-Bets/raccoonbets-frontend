@@ -379,7 +379,7 @@ export interface MarketJSONUp {
 
 /**
  * Shape of market attributes sent from the frontend to the back-end on update. `locks_at` is
- * omitted once positions exist — the backend rejects changing it after the first position.
+ * editable while the market is open; the backend emails position holders about changes.
  */
 export interface MarketUpdateJSONUp {
   title: string

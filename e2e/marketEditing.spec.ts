@@ -10,23 +10,20 @@ import {
   placePosition,
 } from './helpers'
 
-// Market editing: the creator can change the title and description while the
-// market is open, and the closing time only until the first position lands (the
-// input freezes after that). Non-creators get no edit affordance at all.
+// Market editing: the creator (or a group admin) can change the title,
+// description, and closing time while the market is open — even after
+// positions exist (holders are emailed instead of the field freezing).
+// Members who are neither get no edit affordance at all.
 
-test.describe('Market editing: creator only, locks_at frozen after the first position', () => {
-  test('edits title, description, and locks_at, then locks_at freezes', async ({
+test.describe('Market editing: creator or admin, while open', () => {
+  test('the creator edits title, description, and locks_at, even after a position lands', async ({
     page,
     resetDatabase: _reset,
   }) => {
     await logInToGroup(page, ADMIN.email)
     const marketId = await createMarket(page, 'Will the first draft survive?')
 
-    // ── With no positions, everything is editable ────────────────────────
     await page.getByTestId('market-edit-toggle').click()
-    await expect(page.getByTestId('market-edit-locks-at')).toBeEnabled()
-    await expect(page.getByTestId('market-edit-locks-frozen')).toHaveCount(0)
-
     await page.getByTestId('market-edit-title').fill('Will the second draft survive?')
     await page.getByTestId('market-edit-description').fill('The oracle judges at midnight.')
     await page.getByTestId('market-edit-locks-at').fill(locksAtValue(60))
@@ -38,21 +35,19 @@ test.describe('Market editing: creator only, locks_at frozen after the first pos
     )
     await expect(page.getByText('The oracle judges at midnight.')).toBeVisible()
 
-    // ── After the first position, locks_at freezes but text stays editable ─
+    // locks_at stays editable after the first position lands.
     await placePosition(page, marketId, 'YES', '1')
     await page.getByTestId('market-edit-toggle').click()
-    await expect(page.getByTestId('market-edit-locks-at')).toBeDisabled()
-    await expect(page.getByTestId('market-edit-locks-frozen')).toBeVisible()
-
-    await page.getByTestId('market-edit-title').fill('Will the final draft survive?')
+    await expect(page.getByTestId('market-edit-locks-at')).toBeEnabled()
+    await page.getByTestId('market-edit-locks-at').fill(locksAtValue(90))
     await page.getByTestId('market-edit-submit').click()
     await expect(page.getByTestId('market-edit-form')).toHaveCount(0)
-    await expect(page.getByTestId('market-detail-title')).toHaveText(
-      'Will the final draft survive?',
-    )
   })
 
-  test('a non-creator sees no edit affordance', async ({ page, resetDatabase: _reset }) => {
+  test('a member who is neither creator nor admin sees no edit affordance', async ({
+    page,
+    resetDatabase: _reset,
+  }) => {
     await logInToGroup(page, ADMIN.email)
     const marketId = await createMarket(page, 'Whose market is this anyway?')
     await logOut(page)
@@ -63,6 +58,43 @@ test.describe('Market editing: creator only, locks_at frozen after the first pos
     // The page is fully interactive (the order slip renders) yet offers no edit.
     await expect(page.getByTestId('order-slip')).toBeVisible()
     await expect(page.getByTestId('market-edit-toggle')).toHaveCount(0)
+  })
+})
+
+test.describe('Admin market tools', () => {
+  test('an admin edits another member’s market, cancels a position, and deletes the market', async ({
+    page,
+    resetDatabase: _reset,
+  }) => {
+    page.on('dialog', (dialog) => void dialog.accept())
+
+    // The plain member creates a market and takes a position on it.
+    await logInToGroup(page, MEMBER.email)
+    const marketId = await createMarket(page, 'Will the admin tidy this up?')
+    await placePosition(page, marketId, 'YES', '1')
+    await logOut(page)
+
+    // The admin — not the creator — gets the edit affordance and uses it.
+    await logInToGroup(page, ADMIN.email)
+    await page.goto(`${GROUP_URL}/markets/${String(marketId)}`)
+    await page.getByTestId('market-edit-toggle').click()
+    await expect(page.getByTestId('market-edit-locks-at')).toBeEnabled()
+    await page.getByTestId('market-edit-title').fill('Will the admin tidy this up? (edited)')
+    await page.getByTestId('market-edit-locks-at').fill(locksAtValue(90))
+    await page.getByTestId('market-edit-submit').click()
+    await expect(page.getByTestId('market-detail-title')).toHaveText(
+      'Will the admin tidy this up? (edited)',
+    )
+
+    // Cancel the member's position (the confirm dialog is auto-accepted).
+    await page.locator('[data-testid$="-admin-cancel"]').click()
+    await expect(page.getByTestId('positions-empty')).toBeVisible()
+
+    // Delete the market and land back on the feed, where it is gone.
+    await page.getByTestId('market-delete').click()
+    await page.waitForURL(`${GROUP_URL}/`)
+    await expect(page.getByTestId('feed-title')).toBeVisible()
+    await expect(page.getByText('Will the admin tidy this up? (edited)')).toHaveCount(0)
   })
 })
 

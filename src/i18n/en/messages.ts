@@ -231,7 +231,13 @@ const en: LocaleMessage<VueMessageType> = {
     editButton: 'Save changes',
     editCancel: 'Cancel',
     editError: 'Couldn’t update the market: {error}',
-    locksAtFrozen: 'The closing time can’t change once a position has been taken.',
+    deleteLink: 'Delete market',
+    deleteConfirm:
+      'Delete this market? All positions will be removed and their holders emailed. This can’t be undone.',
+    deleteError: 'Couldn’t delete the market: {error}',
+    cancelPositionButton: 'Cancel position',
+    cancelPositionConfirm: 'Cancel {name}’s {amount} position? They’ll be emailed about it.',
+    cancelPositionError: 'Couldn’t cancel the position: {error}',
     payoutsTitle: 'Payouts',
     eventsTitle: 'History',
     event: {

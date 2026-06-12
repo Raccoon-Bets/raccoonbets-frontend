@@ -83,7 +83,11 @@ export async function logInOnApex(
 export async function logOut(page: Page, host: string = GROUP_URL): Promise<void> {
   await page.goto(`${host}/`)
   await page.getByTestId('current-user-email').click()
-  await page.getByTestId('logout-button').click()
+  // The menu popup's enter animation can keep the item's bounding box moving past
+  // Playwright's stability check under load; once visible it is hit-testable.
+  const logoutItem = page.getByTestId('logout-button')
+  await expect(logoutItem).toBeVisible()
+  await logoutItem.click({ force: true })
   await page.waitForURL('**/login')
 }
 

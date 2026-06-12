@@ -6,6 +6,7 @@ import type { MarketDetail } from '@/types'
 import { groupPath, requestJSON } from '@/stores/modules/root'
 import {
   anythingToError,
+  ignoreAPIResponseBodyOrReturnAllErrors,
   ignoreAPIResponseBodyOrReturnErrors,
   loadAPIResponseBodyOrReturnAllErrors,
   loadAPIResponseBodyOrThrowErrors,
@@ -67,11 +68,10 @@ export const useMarketStore = defineStore('market', {
     },
 
     /**
-     * Updates the loaded market's editable attributes. Creator only, while the market is open. On
-     * success the store holds the updated market.
+     * Updates the loaded market's editable attributes. Creator or group admin, while the market
+     * is open. On success the store holds the updated market.
      *
-     * @param attributes The new title and description, plus `locks_at` while it is still
-     * changeable (no positions yet).
+     * @param attributes The new title, description, and `locks_at`.
      * @returns A Result containing nothing if successful, or the errors (business-rule
      * rejections land under `base`) if failed.
      * @throws If an HTTP error occurs, or when no market is loaded.
@@ -129,6 +129,44 @@ export const useMarketStore = defineStore('market', {
         path: groupPath(`/markets/${String(market.id)}/position`),
       })
       const result = ignoreAPIResponseBodyOrReturnErrors(response)
+      if (result.ok) await this.loadMarket(market.id)
+      return result
+    },
+
+    /**
+     * Deletes the loaded market. Group admins only; the backend refuses (422) once any money
+     * has moved. On success the market is gone — the caller navigates away.
+     *
+     * @returns A Result containing nothing if successful, or the errors (the ledger
+     * restriction lands under `base`) if failed.
+     * @throws If an HTTP error occurs, or when no market is loaded.
+     */
+
+    async deleteMarket(): Promise<Result<void, Errors>> {
+      const market = this.requireMarket()
+      const response = await requestJSON<unknown>({
+        method: 'delete',
+        path: groupPath(`/markets/${String(market.id)}`),
+      })
+      return ignoreAPIResponseBodyOrReturnAllErrors(response)
+    },
+
+    /**
+     * Cancels another member's position on the loaded market (group admins only), then
+     * reloads the market. The backend emails the position's owner.
+     *
+     * @param positionId The position's ID.
+     * @returns A Result containing nothing if successful, or the validation errors if failed.
+     * @throws If an HTTP error occurs, or when no market is loaded.
+     */
+
+    async cancelMemberPosition(positionId: number): Promise<Result<void, Errors>> {
+      const market = this.requireMarket()
+      const response = await requestJSON<unknown>({
+        method: 'delete',
+        path: groupPath(`/markets/${String(market.id)}/positions/${String(positionId)}`),
+      })
+      const result = ignoreAPIResponseBodyOrReturnAllErrors(response)
       if (result.ok) await this.loadMarket(market.id)
       return result
     },
