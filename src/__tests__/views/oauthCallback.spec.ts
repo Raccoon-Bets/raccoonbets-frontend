@@ -6,7 +6,10 @@ import PrimeVue from 'primevue/config'
 import OauthCallback from '@/views/auth/oauthCallback.vue'
 import { useAuthStore } from '@/stores/modules/auth'
 import { useAccountStore } from '@/stores/modules/account'
+import { notifySentry } from '@/utils/errors'
 import i18n from '@/i18n'
+
+vi.mock('@/utils/errors', () => ({ notifySentry: vi.fn() }))
 
 function buildRouter() {
   return createRouter({
@@ -59,5 +62,6 @@ describe('oauthCallback.vue', () => {
 
     expect(auth.setOAuthTokens).not.toHaveBeenCalled()
     expect(wrapper.find('[data-testid="oauth-error"]').exists()).toBe(true)
+    expect(notifySentry).toHaveBeenCalled()
   })
 })

@@ -48,11 +48,40 @@ let inFlightRefresh: Promise<boolean> | null = null
 // Returned to callers after an unrecoverable 401: see the comment above its use.
 const NEVER_SETTLES = new Promise<Response>(() => undefined)
 
+// Serializes refreshes across every tab and subdomain on the shared apex-cookie
+// session via the Web Locks API, so the single-use refresh token is rotated by
+// exactly one context per expiry while the rest adopt the rotated token from the
+// cookie. Falls back to no cross-tab lock where the API is unavailable (the
+// in-tab `inFlightRefresh` and the cookie-adopt recovery still apply).
+function withRefreshLock(run: () => Promise<boolean>): Promise<boolean> {
+  // The Web Locks API needs a secure context and isn't universally available
+  // (older browsers, dev's http origin), so feature-detect it rather than trust
+  // the DOM lib's unconditional typing.
+  const lockManager = (navigator as { locks?: LockManager }).locks
+  return lockManager ? lockManager.request('rb-token-refresh', run) : run()
+}
+
 function refreshAccessTokenOnce(auth: ReturnType<typeof useAuthStore>): Promise<boolean> {
-  inFlightRefresh ??= auth.refreshAccessToken().finally(() => {
+  // refreshAccessToken adopts a sibling's rotated token from the cookie before
+  // spending its own, so holding the lock around it means a tab that waited
+  // simply inherits the winner's session rather than refreshing again.
+  inFlightRefresh ??= withRefreshLock(() => auth.refreshAccessToken()).finally(() => {
     inFlightRefresh = null
   })
   return inFlightRefresh
+}
+
+/**
+ * Refreshes the access token using the stored refresh token, coalescing
+ * concurrent callers onto the single in-flight `/jwt-refresh` so Rodauth's
+ * single-use refresh token is spent exactly once. Shared by the 401-retry path
+ * and the auth gate / bootstrap, which use it to revive an expired-but-
+ * refreshable session instead of treating it as logged out.
+ *
+ * @returns Whether the session is valid after the attempt.
+ */
+export function refreshSession(): Promise<boolean> {
+  return refreshAccessTokenOnce(useAuthStore())
 }
 
 /**

@@ -61,5 +61,25 @@ app.config.errorHandler = (err, _instance, info) => {
   }
 }
 
+// A deploy replaces the content-hashed route chunks, so a client still running
+// an older page fails to lazy-load a route with "Failed to fetch dynamically
+// imported module". Vite fires `vite:preloadError` for exactly this; reloading
+// pulls the fresh chunks (and the auto-updating service worker's new precache).
+// The sessionStorage guard stops a genuinely missing chunk from reloading
+// forever — a second failure is reported to Sentry instead.
+const PRELOAD_RELOADED_KEY = 'rb-preload-reloaded'
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault()
+  if (sessionStorage.getItem(PRELOAD_RELOADED_KEY)) {
+    if (config.sentryDSN) Sentry.captureException(event.payload)
+    return
+  }
+  sessionStorage.setItem(PRELOAD_RELOADED_KEY, '1')
+  window.location.reload()
+})
+
 initLocale()
 app.mount('#app')
+// A clean boot means the chunks loaded, so re-arm the one-shot reload guard for
+// the next deploy.
+sessionStorage.removeItem(PRELOAD_RELOADED_KEY)

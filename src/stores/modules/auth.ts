@@ -32,8 +32,18 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({ ...initialState }),
 
   getters: {
-    JWTPayload: (state): JWTPayload | null =>
-      state.JWT ? jwtPayloadSchema.parse(JSON.parse(atob(state.JWT.split('.')[1] ?? ''))) : null,
+    JWTPayload(state): JWTPayload | null {
+      if (state.JWT === null) return null
+      // A truncated or otherwise corrupt token cookie must not throw: this
+      // getter backs loggedIn, currentEmail, and the cable consumer, all read
+      // during boot, so a malformed cookie would otherwise hard-crash startup
+      // with no way to recover. Treat anything unparseable as logged out.
+      try {
+        return jwtPayloadSchema.parse(JSON.parse(atob(state.JWT.split('.')[1] ?? '')))
+      } catch {
+        return null
+      }
+    },
 
     JWTExpiresAt(): Date | null {
       if (this.JWTPayload === null) return null
@@ -153,10 +163,32 @@ export const useAuthStore = defineStore('auth', {
     },
 
     /**
+     * Adopts a fresher session a sibling tab or subdomain may have written to
+     * the shared cookie. Rodauth rotates its single-use refresh token on every
+     * refresh, so two contexts refreshing the same token would invalidate one
+     * another; before (or after failing to) spend our own token, take the
+     * sibling's freshly rotated pair if the cookie now holds a different,
+     * still-valid access token.
+     *
+     * @returns Whether an adopted session is present and unexpired.
+     */
+
+    adoptSiblingRefresh(): boolean {
+      const cookieJWT = getCookie(JWT_COOKIE)
+      if (cookieJWT === null || cookieJWT === this.JWT) return false
+      this.$patch({ JWT: cookieJWT, refreshToken: getCookie(REFRESH_TOKEN_COOKIE) })
+      return this.loggedIn
+    },
+
+    /**
      * Refreshes the access token using the stored refresh token.
      */
 
     async refreshAccessToken(): Promise<boolean> {
+      // A sibling tab or subdomain may have already rotated the shared,
+      // single-use refresh token and written the new pair to the cookie; adopt
+      // it rather than spending our own (now invalid) copy.
+      if (this.adoptSiblingRefresh()) return true
       if (!this.refreshToken || !this.JWT) return false
 
       // Rodauth's jwt-refresh route requires the current (possibly expired)
@@ -171,7 +203,10 @@ export const useAuthStore = defineStore('auth', {
         skipResetAuth: true,
         skipRefresh: true,
       })
-      if (!response.ok || !response.val.body) return false
+      // A concurrent sibling may have won the rotation while this request was in
+      // flight; if the cookie now holds that fresh session, adopt it instead of
+      // reporting a failure that would log this tab out.
+      if (!response.ok || !response.val.body) return this.adoptSiblingRefresh()
 
       this.$patch({
         JWT: response.val.body.access_token,

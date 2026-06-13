@@ -27,6 +27,11 @@ onMounted(async () => {
   const refreshToken = fragment.get('refresh_token')
   if (!accessToken || !refreshToken) {
     failed.value = true
+    // The backend redirects OAuth failures here as a 302 rather than surfacing a
+    // 500, so report them from the client — otherwise they're invisible in
+    // Sentry. This is the signal for, e.g., a mobile browser dropping the
+    // OmniAuth state cookie during the provider round trip.
+    notifySentry(`OAuth callback failed (${fragment.get('error') ?? 'missing tokens'})`)
     return
   }
 
