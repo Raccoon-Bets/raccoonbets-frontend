@@ -1,6 +1,7 @@
 import { Err, Ok } from 'ts-results'
 import type { Result } from 'ts-results'
 import type { APIFailure, APIResponse, Errors } from '@/stores/types'
+import { ExpectedError } from '@/utils/errors'
 import { global } from '@/i18n'
 
 export class LocalizableError extends Error {
@@ -27,9 +28,10 @@ function errorForResponseStatus(status: number): Error {
 }
 
 function returnErrorsForAPIResponse(failure: APIFailure): Errors {
-  // Authentication failures surface as a general error message, not field errors.
+  // Authentication failures (wrong credentials, an expired verification key) are expected,
+  // user-facing rejections: surface a general error message without reporting them to Sentry.
   if (failure.response.status === 401 && failure.body.error) {
-    throw new Error(failure.body.error)
+    throw new ExpectedError(failure.body.error)
   }
 
   // Validation errors are expected - return them
