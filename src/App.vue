@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/modules/auth'
 import { refreshSession } from '@/stores/modules/root'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 import useSessionRefresh from '@/composables/useSessionRefresh'
+import PushPrimingBanner from '@/components/pushPrimingBanner.vue'
 
 const { t } = useI18n()
 const accountStore = useAccountStore()
@@ -36,6 +37,7 @@ onMounted(async () => {
 
 <template>
   <a class="skip-link" href="#main-content">{{ t('a11y.skipToContent') }}</a>
+  <PushPrimingBanner />
   <router-view />
 </template>
 
