@@ -36,6 +36,7 @@ const userSchema = z.object({
     .record(z.string(), z.object({ email: z.boolean().optional(), push: z.boolean().optional() }))
     .optional(),
   vapid_public_key: z.string().nullish(),
+  push_prompt_dismissed_at: z.string().nullish(),
 })
 
 /** Shape of user profile JSON data sent from the frontend to the back-end. */
@@ -69,6 +70,7 @@ export interface UserJSONDown {
   refresh_token?: string
   notification_preferences?: NotificationPreferences
   vapid_public_key?: string | null
+  push_prompt_dismissed_at?: string | null
 }
 
 /**
@@ -89,6 +91,7 @@ export function userFromJSON(data: unknown): User {
     passkeys: JSON.passkeys?.map(passkeyFromJSON) ?? [],
     notificationPreferences: JSON.notification_preferences ?? {},
     vapidPublicKey: JSON.vapid_public_key ?? null,
+    pushPromptDismissedAt: JSON.push_prompt_dismissed_at ?? null,
   }
 }
 

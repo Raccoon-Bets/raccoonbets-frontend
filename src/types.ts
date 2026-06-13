@@ -384,4 +384,7 @@ export interface User {
 
   /** The server's VAPID public key for push subscription, when available. */
   vapidPublicKey: string | null
+
+  /** When the user permanently dismissed the push priming banner; null if not. */
+  pushPromptDismissedAt: string | null
 }

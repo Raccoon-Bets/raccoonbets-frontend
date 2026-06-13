@@ -18,6 +18,7 @@ function buildUser(overrides: Partial<User> = {}): User {
     passkeys: [],
     notificationPreferences: {},
     vapidPublicKey: null,
+    pushPromptDismissedAt: null,
     ...overrides,
   }
 }
