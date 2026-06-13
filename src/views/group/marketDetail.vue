@@ -31,7 +31,7 @@ import { formatMultiplier, payoutMultiplier } from '@/utils/parimutuel'
 import { marketPath } from '@/utils/marketURL'
 import useCanonicalMarketURL from '@/composables/useCanonicalMarketURL'
 import { errorToString, notifySentry } from '@/utils/errors'
-import type { Position } from '@/types'
+import type { Comment, Position } from '@/types'
 
 const { t, d } = useI18n()
 const route = useRoute()
@@ -316,8 +316,45 @@ async function cancelMemberPosition(position: Position): Promise<void> {
   isCancellingPosition.value = false
 }
 
+// ── Comments (any active member, any market state) ────────────────────
+
+const commentBody = ref('')
+const {
+  submitHandler: commentHandler,
+  errors: commentErrors,
+  error: commentError,
+  isProcessing: isCommenting,
+} = useFormErrorHandling(
+  () => marketStore.addComment({ body: commentBody.value }),
+  () => {
+    commentBody.value = ''
+  },
+)
+
+// The author can delete their own; a group admin can delete anyone's.
+const canDeleteComment = (authorId: number): boolean =>
+  isAdmin.value || authorId === groupStore.membership?.id
+
+const commentDeleteError = ref<string | null>(null)
+const isDeletingComment = ref(false)
+
+async function removeComment(comment: Comment): Promise<void> {
+  if (!window.confirm(t('marketDetail.comments.deleteConfirm'))) return
+  commentDeleteError.value = null
+  isDeletingComment.value = true
+  try {
+    const result = await marketStore.deleteComment(comment.id)
+    if (!result.ok) commentDeleteError.value = Object.values(result.val).flat().join(', ')
+  } catch (error) {
+    notifySentry(error)
+    commentDeleteError.value = errorToString(error)
+  }
+  isDeletingComment.value = false
+}
+
 const URL = config.APIURL + groupPath(`/markets/${String(marketId.value)}/position`)
 const editURL = config.APIURL + groupPath(`/markets/${String(marketId.value)}`)
+const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)}/comments`)
 </script>
 
 <template>
@@ -678,6 +715,79 @@ const editURL = config.APIURL + groupPath(`/markets/${String(marketId.value)}`)
             </li>
           </ul>
         </sticker-card>
+
+        <sticker-card class="detail-section">
+          <h2 class="section-head">{{ t('marketDetail.comments.title') }}</h2>
+
+          <Message
+            v-if="commentDeleteError"
+            severity="error"
+            class="inline-message"
+            data-testid="comment-delete-error"
+          >
+            {{ t('marketDetail.comments.deleteError', { error: commentDeleteError }) }}
+          </Message>
+
+          <p v-if="market.comments.length === 0" data-testid="comments-empty">
+            {{ t('marketDetail.comments.empty') }}
+          </p>
+          <ul class="comments">
+            <li
+              v-for="comment in market.comments"
+              :key="comment.id"
+              :data-testid="`comment-${comment.id}`"
+            >
+              <div class="comment-head">
+                <span class="name">{{ comment.author.name }}</span>
+                <small>{{ d(comment.createdAt, 'long') }}</small>
+                <Button
+                  v-if="canDeleteComment(comment.author.id)"
+                  type="button"
+                  size="small"
+                  severity="danger"
+                  outlined
+                  :label="t('marketDetail.comments.deleteButton')"
+                  :disabled="isDeletingComment"
+                  :data-testid="`comment-${comment.id}-delete`"
+                  @click="removeComment(comment)"
+                />
+              </div>
+              <p class="body">{{ comment.body }}</p>
+            </li>
+          </ul>
+
+          <Message
+            v-if="commentError"
+            severity="error"
+            class="inline-message"
+            data-testid="comment-error"
+          >
+            {{ t('marketDetail.comments.error', { error: commentError }) }}
+          </Message>
+          <form method="post" :action="commentsURL" @submit.prevent="commentHandler">
+            <div class="form-field">
+              <label for="comment-body">{{ t('marketDetail.comments.bodyLabel') }}</label>
+              <Textarea
+                id="comment-body"
+                v-model="commentBody"
+                name="comment[body]"
+                rows="3"
+                fluid
+                :invalid="(commentErrors.body?.length ?? 0) > 0"
+                data-testid="comment-body"
+              />
+              <field-errors field="body" :messages="commentErrors.body ?? []" />
+            </div>
+            <div class="actions">
+              <Button
+                type="submit"
+                :label="t('marketDetail.comments.submit')"
+                :disabled="isCommenting || commentBody.trim().length === 0"
+                data-testid="comment-submit"
+              />
+            </div>
+          </form>
+        </sticker-card>
       </template>
     </group-shell>
   </main>
@@ -737,6 +847,37 @@ ul.positions {
     &.loss .net {
       color: var(--p-red-500);
     }
+  }
+}
+
+ul.comments {
+  padding: 0;
+  margin: 0 0 var(--spacing-md);
+  list-style: none;
+
+  li {
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--p-content-border-color);
+  }
+
+  .comment-head {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+
+    .name {
+      font-weight: 600;
+    }
+
+    small {
+      flex: 1;
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  .body {
+    margin: var(--spacing-xs) 0 0;
+    white-space: pre-wrap;
   }
 }
 

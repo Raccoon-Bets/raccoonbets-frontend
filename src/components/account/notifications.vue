@@ -10,6 +10,7 @@ const EVENTS: NotificationEvent[] = [
   'market_created',
   'settlement',
   'market_closing_soon',
+  'market_commented',
 ]
 
 const { t } = useI18n()

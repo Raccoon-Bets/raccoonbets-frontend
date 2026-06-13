@@ -281,9 +281,17 @@ const marketEventSchema = z.object({
   created_at: z.string(),
 })
 
+const commentSchema = z.object({
+  id: z.number(),
+  body: z.string(),
+  created_at: z.string(),
+  author: memberRefSchema,
+})
+
 const marketDetailSchema = marketSchema.extend({
   description: z.string().nullish(),
   positions: z.array(positionSchema),
+  comments: z.array(commentSchema),
   resolved_by: memberRefSchema.nullish(),
   payouts: z.array(payoutSchema),
   events: z.array(marketEventSchema),
@@ -343,6 +351,12 @@ export function marketDetailFromJSON(data: unknown): MarketDetail {
     ...marketFromParsed(parsed),
     description: parsed.description ?? null,
     positions: parsed.positions.map(positionFromParsed),
+    comments: parsed.comments.map((comment) => ({
+      id: comment.id,
+      body: comment.body,
+      author: comment.author,
+      createdAt: new Date(comment.created_at),
+    })),
     resolvedBy: parsed.resolved_by ?? null,
     payouts: parsed.payouts.map((payout) => ({
       membershipId: payout.membership_id,
@@ -391,6 +405,11 @@ export interface MarketUpdateJSONUp {
 export interface PositionJSONUp {
   outcome_id: number
   amount_cents: number
+}
+
+/** Shape of comment attributes sent from the frontend to the back-end on creation. */
+export interface CommentJSONUp {
+  body: string
 }
 
 const balancesSchema = z.object({

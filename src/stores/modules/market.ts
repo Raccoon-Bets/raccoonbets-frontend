@@ -1,7 +1,12 @@
 import { defineStore } from 'pinia'
 import { Ok, type Result } from 'ts-results'
 import type { Errors, MarketState } from '@/stores/types'
-import { marketDetailFromJSON, type PositionJSONUp, type MarketUpdateJSONUp } from '@/stores/coding'
+import {
+  marketDetailFromJSON,
+  type CommentJSONUp,
+  type PositionJSONUp,
+  type MarketUpdateJSONUp,
+} from '@/stores/coding'
 import type { MarketDetail } from '@/types'
 import { groupPath, requestJSON } from '@/stores/modules/root'
 import {
@@ -209,6 +214,50 @@ export const useMarketStore = defineStore('market', {
 
     async voidMarket(): Promise<Result<void, Errors>> {
       return this.requestResolution('delete')
+    },
+
+    /**
+     * Posts a comment to the loaded market. Any active member, any market state. On success the
+     * store holds the market with the new comment.
+     *
+     * @param comment The comment body.
+     * @returns A Result containing nothing if successful, or the validation errors if failed.
+     * @throws If an HTTP error occurs, or when no market is loaded.
+     */
+
+    async addComment(comment: CommentJSONUp): Promise<Result<void, Errors>> {
+      const market = this.requireMarket()
+      const response = await requestJSON<unknown>({
+        method: 'post',
+        path: groupPath(`/markets/${String(market.id)}/comments`),
+        body: { comment },
+      })
+      const result = loadAPIResponseBodyOrReturnAllErrors(response)
+      if (!result.ok) return result
+      this.setMarket(marketDetailFromJSON(result.val))
+      return Ok.EMPTY
+    },
+
+    /**
+     * Deletes a comment on the loaded market. The author or a group admin only. On success the
+     * store holds the market without the comment.
+     *
+     * @param commentId The comment's ID.
+     * @returns A Result containing nothing if successful, or the errors (a forbidden delete lands
+     * under `base`) if failed.
+     * @throws If an HTTP error occurs, or when no market is loaded.
+     */
+
+    async deleteComment(commentId: number): Promise<Result<void, Errors>> {
+      const market = this.requireMarket()
+      const response = await requestJSON<unknown>({
+        method: 'delete',
+        path: groupPath(`/markets/${String(market.id)}/comments/${String(commentId)}`),
+      })
+      const result = loadAPIResponseBodyOrReturnAllErrors(response)
+      if (!result.ok) return result
+      this.setMarket(marketDetailFromJSON(result.val))
+      return Ok.EMPTY
     },
 
     async requestResolution(
