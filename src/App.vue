@@ -3,13 +3,16 @@ import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAccountStore } from '@/stores/modules/account'
 import { useAuthStore } from '@/stores/modules/auth'
+import { refreshSession } from '@/stores/modules/root'
 import { usePushNotifications } from '@/composables/usePushNotifications'
+import useSessionRefresh from '@/composables/useSessionRefresh'
 
 const { t } = useI18n()
 const accountStore = useAccountStore()
 const authStore = useAuthStore()
 
 usePushNotifications()
+useSessionRefresh()
 
 onMounted(async () => {
   // Tokens live in apex-domain cookies so a login on the apex carries over to
@@ -18,6 +21,14 @@ onMounted(async () => {
   authStore.$subscribe(() => {
     authStore.persistToCookies()
   })
+
+  // The access token may have lapsed while the app was closed; revive the
+  // session from the refresh token before loading the account, which otherwise
+  // no-ops for a (transiently) logged-out user and leaves a returning visitor
+  // looking signed out.
+  if (!authStore.loggedIn && authStore.refreshToken && authStore.JWT) {
+    await refreshSession()
+  }
 
   await accountStore.loadAccount()
 })

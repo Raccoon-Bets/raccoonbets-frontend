@@ -31,6 +31,18 @@ describe('auth store cookie persistence', () => {
     expect(auth.loggedIn).toBe(false)
   })
 
+  it('treats a corrupt token cookie as logged out instead of throwing on boot', () => {
+    setCookie('rb_jwt', 'not-a-real-jwt')
+    setCookie('rb_refresh', 'refresh-token')
+
+    const auth = useAuthStore()
+    auth.initializeFromCookies()
+
+    expect(() => auth.loggedIn).not.toThrow()
+    expect(auth.loggedIn).toBe(false)
+    expect(auth.currentEmail).toBeNull()
+  })
+
   it('round-trips tokens through cookies', () => {
     const auth = useAuthStore()
     auth.$patch({ JWT, refreshToken: 'refresh-token' })

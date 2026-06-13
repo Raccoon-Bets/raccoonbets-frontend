@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { requestJSON } from '@/stores/modules/root'
 import { useAuthStore } from '@/stores/modules/auth'
+import { removeCookie, setCookie } from '@/utils/cookieStorage'
+import { JWT } from '../util'
 
 type FetchFn = (input: string, init: RequestInit) => Promise<Response>
 
@@ -23,6 +25,8 @@ describe('request refresh-and-retry', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
+    removeCookie('rb_jwt')
+    removeCookie('rb_refresh')
   })
 
   it('refreshes the access token and replays the original request on 401', async () => {
@@ -96,6 +100,34 @@ describe('request refresh-and-retry', () => {
     })
     const refreshCalls = fetchMock.mock.calls.filter(([url]) => url.includes('/jwt-refresh'))
     expect(refreshCalls).toHaveLength(1)
+  })
+
+  it('adopts a sibling tab\'s refreshed token from the cookie instead of spending its own', async () => {
+    // A sibling tab (or subdomain) already rotated the shared single-use refresh
+    // token and wrote the fresh pair to the apex cookie; this tab still holds the
+    // stale in-memory copy and must not re-spend it (which Rodauth would reject,
+    // logging this tab out).
+    setCookie('rb_jwt', JWT)
+    setCookie('rb_refresh', 'sibling-refresh')
+
+    const fetchMock = vi.fn<FetchFn>((_url, init) =>
+      Promise.resolve(
+        authHeaderOf(init) === 'Bearer old.jwt.token'
+          ? jsonResponse(401, { error: 'expired JWT access token' })
+          : jsonResponse(200, { ok: true }),
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const auth = useAuthStore()
+    const result = await requestJSON({ path: '/account' })
+
+    expect(result.ok).toBe(true)
+    // The sibling's token was adopted, so no refresh was spent...
+    expect(fetchMock.mock.calls.some(([url]) => url.includes('/jwt-refresh'))).toBe(false)
+    // ...and the original request replayed with the adopted session.
+    expect(auth.JWT).toBe(JWT)
+    expect(auth.refreshToken).toBe('sibling-refresh')
   })
 
   it('drops the dead session and loads public content anonymously', async () => {
