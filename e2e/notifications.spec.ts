@@ -52,82 +52,9 @@ test.describe('Account: notification preferences', () => {
   })
 })
 
-test.describe('Push priming banner', () => {
-  // The banner's `visible` guard requires pushSupported() (serviceWorker + PushManager),
-  // which is only true in a secure context. The e2e stack serves the SPA over plain
-  // http://lvh.me:4173 (isSecureContext === false), so navigator.serviceWorker is absent
-  // and Chromium reports Notification.permission as 'denied' even when the context grants
-  // notifications. The banner therefore never renders here. Fixme until the e2e preview is
-  // served over HTTPS (or 127.0.0.1, which Chromium treats as secure).
-  test.fixme('shows for a logged-in user who has not decided on push', async ({
-    page,
-    resetDatabase: _reset,
-  }) => {
-    await logInOnApex(page, ADMIN.email)
-    await page.goto(`${APEX_URL}/account`)
-    await expect(page.getByTestId('push-priming-banner')).toBeVisible()
-  })
-
-  // Fixme for the same insecure-origin reason as above: the banner never renders, so
-  // there is nothing to dismiss.
-  test.fixme('"Don\'t bother me again" hides it and persists across reload', async ({
-    page,
-    resetDatabase: _reset,
-  }) => {
-    await logInOnApex(page, ADMIN.email)
-    await page.goto(`${APEX_URL}/account`)
-
-    const banner = page.getByTestId('push-priming-banner')
-    await expect(banner).toBeVisible()
-
-    await Promise.all([
-      page.waitForResponse(
-        (r) => r.url().endsWith('/account') && r.request().method() === 'PATCH' && r.ok(),
-      ),
-      page.getByTestId('push-priming-dismiss').click(),
-    ])
-    await expect(banner).toBeHidden()
-
-    await page.reload()
-    await expect(page.getByTestId('push-priming-banner')).toBeHidden()
-  })
-
-  test('does not show when notification permission is already granted', async ({
-    browser,
-    resetDatabase: _reset,
-  }) => {
-    const context = await browser.newContext({ permissions: ['notifications'] })
-    const page = await context.newPage()
-    await logInOnApex(page, ADMIN.email)
-    await page.goto(`${APEX_URL}/account`)
-    await expect(page.getByTestId('notifications-section')).toBeVisible()
-    await expect(page.getByTestId('push-priming-banner')).toBeHidden()
-    await context.close()
-  })
-
-  // A context with notifications granted makes permission 'granted', so the app should
-  // silently subscribe the device by POSTing the PushSubscription. Fixme here because the
-  // e2e SPA is served over insecure http://lvh.me:4173 (isSecureContext === false): the
-  // service worker API is unavailable and Chromium reports the permission as 'denied'
-  // regardless of the granted context, so ensurePushSubscription() bails before the POST.
-  // Verified empirically: navigator.serviceWorker is absent on this origin.
-  test.fixme('subscribes the device when notification permission is granted', async ({
-    browser,
-    resetDatabase: _reset,
-  }) => {
-    const context = await browser.newContext({ permissions: ['notifications'] })
-    const page = await context.newPage()
-
-    const subscribed = page.waitForRequest(
-      (r) => r.url().endsWith('/account/push_subscriptions') && r.method() === 'POST',
-      { timeout: 15_000 },
-    )
-    await logInOnApex(page, ADMIN.email)
-    await page.goto(`${APEX_URL}/account`)
-    await subscribed
-    await context.close()
-  })
-})
+// The push priming banner tests live in pushBanner.spec.ts: they need a secure-context
+// Chromium launch flag, which Playwright only allows at file top level, and isolating them
+// keeps the PWA service worker out of these waitForResponse-based tests.
 
 test.describe('Notification emails', () => {
   test('emails a participating non-actor when their market resolves', async ({
