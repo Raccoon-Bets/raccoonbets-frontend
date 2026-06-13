@@ -6,11 +6,16 @@ import config from '@/config'
 const { t } = useI18n()
 
 // The OmniAuth request phase is a top-level POST (OmniAuth 2 disables GET), so
-// each provider is a real form submission rather than an XHR. The `origin`
-// query tells the backend which frontend host — the apex or a group subdomain —
-// to return the browser to once the OAuth dance completes.
+// each provider is a real form submission rather than an XHR. The handshake is
+// brokered on the apex — even from a group subdomain — so the OmniAuth `state`
+// cookie is set and read first-party to the apex and survives privacy browsers
+// that drop cookies set in a cross-site context, and so the providers see a
+// single, pre-registered redirect_uri. The `origin` query tells the backend
+// which frontend host to return the browser to once the OAuth dance completes.
 function providerAction(provider: 'google' | 'apple'): string {
-  return `${config.APIURL}/auth/${provider}?origin=${encodeURIComponent(window.location.origin)}`
+  const { protocol, port } = window.location
+  const apexOrigin = `${protocol}//${config.apexDomain}${port ? `:${port}` : ''}`
+  return `${apexOrigin}/auth/${provider}?origin=${encodeURIComponent(window.location.origin)}`
 }
 </script>
 
