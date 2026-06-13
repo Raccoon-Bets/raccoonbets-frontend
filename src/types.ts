@@ -6,6 +6,7 @@ export type NotificationEvent =
   | 'market_created'
   | 'settlement'
   | 'market_closing_soon'
+  | 'market_commented'
 
 /** A per-event pair of channel toggles. */
 export interface ChannelToggles {
@@ -214,6 +215,21 @@ export interface MarketEvent {
   createdAt: Date
 }
 
+/** A member's free-text remark on a {@link Market}; the thread is flat and chronological. */
+export interface Comment {
+  /** The comment's ID. */
+  id: number
+
+  /** The comment's text. */
+  body: string
+
+  /** When the comment was posted. */
+  createdAt: Date
+
+  /** The member who wrote it. */
+  author: MemberRef
+}
+
 /** A {@link Market} in full: the feed representation plus its description and every position. */
 export interface MarketDetail extends Market {
   /** Optional resolution criteria and context. */
@@ -221,6 +237,9 @@ export interface MarketDetail extends Market {
 
   /** Every position on the market, with member names. */
   positions: Position[]
+
+  /** The discussion thread, oldest first. */
+  comments: Comment[]
 
   /** The member who resolved or voided the market, if it has been. */
   resolvedBy: MemberRef | null
