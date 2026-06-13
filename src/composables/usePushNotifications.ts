@@ -6,7 +6,7 @@ import { useAccountStore } from '@/stores/modules/account'
 import { urlBase64ToUint8Array } from '@/utils/webPush'
 import { notifySentry } from '@/utils/errors'
 
-function pushSupported(): boolean {
+export function pushSupported(): boolean {
   return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
 }
 

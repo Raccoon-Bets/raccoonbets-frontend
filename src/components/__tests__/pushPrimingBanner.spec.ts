@@ -11,7 +11,10 @@ import type { User } from '@/types'
 const { ensurePushSubscription } = vi.hoisted(() => ({
   ensurePushSubscription: vi.fn(() => Promise.resolve()),
 }))
-vi.mock('@/composables/usePushNotifications', () => ({
+vi.mock('@/composables/usePushNotifications', async (importOriginal) => ({
+  // Keep the real pushSupported() so the banner's support check is exercised by the
+  // navigator.serviceWorker/PushManager globals these tests stub (or omit).
+  ...(await importOriginal<typeof import('@/composables/usePushNotifications')>()),
   ensurePushSubscription,
   usePushNotifications: vi.fn(),
 }))
@@ -98,6 +101,8 @@ describe('pushPrimingBanner.vue', () => {
   })
 
   it('hides when push is unsupported (no Notification)', () => {
+    // setPermission(undefined) leaves navigator.serviceWorker/PushManager unstubbed, so
+    // pushSupported() returns false in jsdom — that absence is what hides the banner here.
     setPermission(undefined)
     const { wrapper } = mountBanner({ user: buildUser() })
     expect(wrapper.find('[data-testid="push-priming-banner"]').exists()).toBe(false)

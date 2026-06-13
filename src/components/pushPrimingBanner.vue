@@ -5,7 +5,7 @@ import Button from 'primevue/button'
 import { storeToRefs } from 'pinia'
 import { useAccountStore } from '@/stores/modules/account'
 import { useAuthStore } from '@/stores/modules/auth'
-import { ensurePushSubscription } from '@/composables/usePushNotifications'
+import { ensurePushSubscription, pushSupported } from '@/composables/usePushNotifications'
 import { notifySentry } from '@/utils/errors'
 
 const { t } = useI18n()
@@ -17,10 +17,6 @@ const { currentUser } = storeToRefs(accountStore)
 // Hidden for the rest of this session once the user acts on it. Permission state
 // isn't reactive, so we flip this locally rather than re-reading Notification.
 const acted = ref(false)
-
-function pushSupported(): boolean {
-  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
-}
 
 const visible = computed(() => {
   if (acted.value) return false
@@ -43,7 +39,7 @@ async function dismiss(): Promise<void> {
 </script>
 
 <template>
-  <div v-if="visible" data-testid="push-priming-banner" class="push-priming-banner" role="region">
+  <div v-if="visible" data-testid="push-priming-banner" class="push-priming-banner">
     <div class="push-priming-banner__text">
       <strong>{{ t('pushBanner.title') }}</strong>
       <p>{{ t('pushBanner.body') }}</p>
