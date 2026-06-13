@@ -123,6 +123,7 @@ const en: LocaleMessage<VueMessageType> = {
       push: 'Push',
       pushDenied:
         'Push is blocked in this browser. Enable notifications in your browser settings to turn it on.',
+      enableOnDevice: 'Enable push on this device',
       events: {
         market_resolved: 'A market you have a position in is resolved',
         market_created: 'A new market is created',
@@ -131,6 +132,12 @@ const en: LocaleMessage<VueMessageType> = {
         market_commented: 'Someone comments on a market you created or commented on',
       },
     },
+  },
+  pushBanner: {
+    title: 'Stay on top of your markets',
+    body: 'Get notified when markets resolve, close soon, or someone replies.',
+    enable: 'Yes',
+    dismiss: "Don't bother me again",
   },
   groups: {
     title: 'Your groups',
