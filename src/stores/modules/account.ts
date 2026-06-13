@@ -218,6 +218,22 @@ export const useAccountStore = defineStore('account', {
     },
 
     /**
+     * Permanently dismisses the push priming banner for this account by stamping
+     * `push_prompt_dismissed_at` server-side; refreshes the local user so the
+     * banner stops showing on every device.
+     */
+    async dismissPushPrompt(): Promise<void> {
+      const response = await requestJSON<UserJSONDown>({
+        method: 'PATCH',
+        path: '/account',
+        body: { user: { dismiss_push_prompt: true } },
+      })
+      if (response.ok) {
+        this.setCurrentUser(userFromJSON(loadAPIResponseBodyOrThrowErrors(response)))
+      }
+    },
+
+    /**
      * Deletes the current User account.
      */
 
