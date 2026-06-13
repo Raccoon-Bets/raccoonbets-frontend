@@ -49,6 +49,12 @@ async function enableOnDevice(): Promise<void> {
 const pushPermission = computed(() =>
   'Notification' in window ? Notification.permission : 'unsupported',
 )
+
+// Only offer to enable push when it can actually be requested and the server
+// has a VAPID key to subscribe against.
+const canEnablePush = computed(
+  () => pushPermission.value === 'default' && Boolean(accountStore.currentUser?.vapidPublicKey),
+)
 </script>
 
 <template>
@@ -61,7 +67,7 @@ const pushPermission = computed(() =>
     </p>
 
     <Button
-      v-if="pushPermission === 'default'"
+      v-if="canEnablePush"
       :label="t('account.notifications.enableOnDevice')"
       data-testid="enable-push-device"
       @click="enableOnDevice"

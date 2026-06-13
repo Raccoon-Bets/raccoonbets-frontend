@@ -100,6 +100,12 @@ describe('pushPrimingBanner.vue', () => {
     expect(wrapper.find('[data-testid="push-priming-banner"]').exists()).toBe(false)
   })
 
+  it('hides when the server has no VAPID key to subscribe against', () => {
+    setPermission('default')
+    const { wrapper } = mountBanner({ user: buildUser({ vapidPublicKey: null }) })
+    expect(wrapper.find('[data-testid="push-priming-banner"]').exists()).toBe(false)
+  })
+
   it('hides when push is unsupported (no Notification)', () => {
     // setPermission(undefined) leaves navigator.serviceWorker/PushManager unstubbed, so
     // pushSupported() returns false in jsdom — that absence is what hides the banner here.

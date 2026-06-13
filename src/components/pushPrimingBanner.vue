@@ -21,7 +21,13 @@ const acted = ref(false)
 const visible = computed(() => {
   if (acted.value) return false
   if (!loggedIn.value) return false
-  if (currentUser.value?.pushPromptDismissedAt !== null) return false
+  const user = currentUser.value
+  // No user yet (account still loading): stay hidden until it loads.
+  if (!user) return false
+  // Already dismissed for this account.
+  if (user.pushPromptDismissedAt !== null) return false
+  // Nothing to offer if the server has no VAPID key to subscribe against.
+  if (!user.vapidPublicKey) return false
   if (!pushSupported() || Notification.permission !== 'default') return false
   return true
 })
