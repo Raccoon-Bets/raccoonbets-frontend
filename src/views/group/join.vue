@@ -46,11 +46,7 @@ onMounted(() => {
       return
     }
     if (groupStore.groupPreview !== null) {
-      if (
-        authStore.loggedIn &&
-        consumeJoinIntent() &&
-        !groupStore.groupPreview.joinRequested
-      ) {
+      if (authStore.loggedIn && consumeJoinIntent() && !groupStore.groupPreview.joinRequested) {
         void submitHandler()
       }
       return

@@ -102,7 +102,7 @@ describe('request refresh-and-retry', () => {
     expect(refreshCalls).toHaveLength(1)
   })
 
-  it('adopts a sibling tab\'s refreshed token from the cookie instead of spending its own', async () => {
+  it("adopts a sibling tab's refreshed token from the cookie instead of spending its own", async () => {
     // A sibling tab (or subdomain) already rotated the shared single-use refresh
     // token and wrote the fresh pair to the apex cookie; this tab still holds the
     // stale in-memory copy and must not re-spend it (which Rodauth would reject,

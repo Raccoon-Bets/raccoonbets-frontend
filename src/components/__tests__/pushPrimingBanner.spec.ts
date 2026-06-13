@@ -45,13 +45,7 @@ function setPermission(permission: NotificationPermission | undefined) {
   }
 }
 
-function mountBanner({
-  user,
-  loggedIn = true,
-}: {
-  user: User | null
-  loggedIn?: boolean
-}) {
+function mountBanner({ user, loggedIn = true }: { user: User | null; loggedIn?: boolean }) {
   const pinia = createTestingPinia({ createSpy: () => vi.fn(() => Promise.resolve()) })
   const account = useAccountStore(pinia)
   const auth = useAuthStore(pinia)
@@ -97,6 +91,12 @@ describe('pushPrimingBanner.vue', () => {
   it('hides when not logged in', () => {
     setPermission('default')
     const { wrapper } = mountBanner({ user: null, loggedIn: false })
+    expect(wrapper.find('[data-testid="push-priming-banner"]').exists()).toBe(false)
+  })
+
+  it('hides when the server has no VAPID key to subscribe against', () => {
+    setPermission('default')
+    const { wrapper } = mountBanner({ user: buildUser({ vapidPublicKey: null }) })
     expect(wrapper.find('[data-testid="push-priming-banner"]').exists()).toBe(false)
   })
 
