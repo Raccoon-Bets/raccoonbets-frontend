@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import PrimeVue from 'primevue/config'
@@ -6,6 +6,14 @@ import AccountNotifications from '@/components/account/notifications.vue'
 import { useAccountStore } from '@/stores/modules/account'
 import i18n from '@/i18n'
 import type { User } from '@/types'
+
+const { ensurePushSubscription } = vi.hoisted(() => ({
+  ensurePushSubscription: vi.fn(() => Promise.resolve()),
+}))
+vi.mock('@/composables/usePushNotifications', () => ({
+  ensurePushSubscription,
+  usePushNotifications: vi.fn(),
+}))
 
 function buildUser(overrides: Partial<User> = {}): User {
   return {
@@ -34,6 +42,11 @@ function mountPanel(user: User) {
 }
 
 describe('notifications.vue', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.clearAllMocks()
+  })
+
   it('renders every event x channel as ON when a pref key is absent', () => {
     // market_created.email is the only override; everything else defaults to ON.
     const user = buildUser({
@@ -63,5 +76,22 @@ describe('notifications.vue', () => {
     // Untouched channels stay ON.
     expect(preferences.market_created?.push).toBe(true)
     expect(preferences.market_resolved?.email).toBe(true)
+  })
+
+  it('shows the enable-on-device button and subscribes when permission is default', async () => {
+    vi.stubGlobal('Notification', { permission: 'default' })
+    const { wrapper } = mountPanel(buildUser({ vapidPublicKey: 'aGVsbG8' }))
+
+    const button = wrapper.get('[data-testid="enable-push-device"]')
+    await button.trigger('click')
+
+    expect(ensurePushSubscription).toHaveBeenCalledWith('aGVsbG8')
+  })
+
+  it('hides the enable-on-device button when permission is granted', () => {
+    vi.stubGlobal('Notification', { permission: 'granted' })
+    const { wrapper } = mountPanel(buildUser())
+
+    expect(wrapper.find('[data-testid="enable-push-device"]').exists()).toBe(false)
   })
 })

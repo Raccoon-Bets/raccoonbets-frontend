@@ -2,7 +2,10 @@
 import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Checkbox from 'primevue/checkbox'
+import Button from 'primevue/button'
 import { useAccountStore } from '@/stores/modules/account'
+import { ensurePushSubscription } from '@/composables/usePushNotifications'
+import { notifySentry } from '@/utils/errors'
 import type { ChannelToggles, NotificationEvent, NotificationPreferences } from '@/types'
 
 const EVENTS: NotificationEvent[] = [
@@ -38,6 +41,11 @@ async function save(): Promise<void> {
   await accountStore.updateNotificationPreferences(model)
 }
 
+async function enableOnDevice(): Promise<void> {
+  const key = accountStore.currentUser?.vapidPublicKey
+  if (key) await ensurePushSubscription(key).catch(notifySentry)
+}
+
 const pushPermission = computed(() =>
   'Notification' in window ? Notification.permission : 'unsupported',
 )
@@ -51,6 +59,13 @@ const pushPermission = computed(() =>
     <p v-if="pushPermission === 'denied'" data-testid="push-denied">
       {{ t('account.notifications.pushDenied') }}
     </p>
+
+    <Button
+      v-if="pushPermission === 'default'"
+      :label="t('account.notifications.enableOnDevice')"
+      data-testid="enable-push-device"
+      @click="enableOnDevice"
+    />
 
     <table>
       <thead>
