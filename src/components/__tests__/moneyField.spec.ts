@@ -38,4 +38,9 @@ describe('moneyField.vue', () => {
     expect(wrapper.get('label').attributes('for')).toBe('group-min_amount_cents')
     expect(wrapper.get('#group-min_amount_cents').element.tagName).toBe('INPUT')
   })
+
+  it('requests a decimal keypad so mobile users can enter fractional amounts', () => {
+    const input = mountField().get('[data-testid="group-min-amount"]')
+    expect(input.attributes('inputmode')).toBe('decimal')
+  })
 })

@@ -49,10 +49,17 @@ const hasError = computed(() => errorMessages.value.length > 0)
 // name, so name the currency in an aria-label — restoring the screen-reader
 // context the dropped "in {currency}" label text used to carry.
 const ariaLabel = computed(() => `${props.label} (${props.currency})`)
+
+// PrimeVue derives the mobile keyboard hint from `minFractionDigits`, so a
+// field that allows but doesn't require decimals (any currency with fractional
+// units) gets a digit-only `numeric` keypad with no decimal point. Override it
+// based on the currency's actual precision.
+const inputMode = computed(() => (digits.value > 0 ? 'decimal' : 'numeric'))
 const pt = computed(() => ({
   pcInputText: {
     root: {
       'aria-label': ariaLabel.value,
+      inputmode: inputMode.value,
       ...(props.testid === undefined ? {} : { 'data-testid': props.testid }),
     },
   },
