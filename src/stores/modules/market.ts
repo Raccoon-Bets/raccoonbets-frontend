@@ -181,13 +181,19 @@ export const useMarketStore = defineStore('market', {
      * group admin. On success the store holds the updated market, payouts included.
      *
      * @param outcomeId The winning outcome's ID.
+     * @param effectiveAt The cutoff to settle the pool as of, for an early resolution; bets placed
+     * or raised after it are excluded. Omit (or pass null) to resolve a scheduled market normally.
      * @returns A Result containing nothing if successful, or the errors (business-rule
      * rejections land under `base`) if failed.
      * @throws If an HTTP error occurs, or when no market is loaded.
      */
 
-    async resolve(outcomeId: number): Promise<Result<void, Errors>> {
-      return this.requestResolution('post', { outcome_id: outcomeId })
+    async resolve(outcomeId: number, effectiveAt?: Date | null): Promise<Result<void, Errors>> {
+      const body: Record<string, unknown> = { outcome_id: outcomeId }
+      if (effectiveAt !== null && effectiveAt !== undefined) {
+        body.effective_at = effectiveAt.toISOString()
+      }
+      return this.requestResolution('post', body)
     },
 
     /**

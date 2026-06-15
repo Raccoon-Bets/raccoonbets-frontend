@@ -6,6 +6,7 @@ import {
   createMarket,
   logInToGroup,
   logOut,
+  placePosition,
   runTradingRound,
 } from './helpers'
 
@@ -80,6 +81,33 @@ test.describe('Resolution governance: correct, void, and access control', () => 
     const balances = page.getByTestId('balances')
     await expect(balances.locator('tr', { hasText: ADMIN.name })).toContainText('$0.00')
     await expect(balances.locator('tr', { hasText: MEMBER.name })).toContainText('$0.00')
+  })
+
+  test('an open-ended market is resolved early, paying out the live pool', async ({
+    page,
+    resetDatabase: _reset,
+  }) => {
+    await logInToGroup(page, ADMIN.email)
+    const marketId = await createMarket(page, 'Who knocks it over first?', { openEnded: true })
+    await placePosition(page, marketId, 'YES', '1')
+    await logOut(page)
+
+    await logInToGroup(page, MEMBER.email)
+    await placePosition(page, marketId, 'NO', '1')
+    await logOut(page)
+
+    // No lock step: an open-ended market never locks, so the oracle resolves it
+    // early with the cutoff defaulting to now (all current bets count).
+    await logInToGroup(page, ADMIN.email)
+    await page.goto(`${GROUP_URL}/markets/${String(marketId)}/resolve`)
+    await page.getByTestId('resolve-early-form').getByLabel('YES', { exact: true }).check()
+    await page.getByTestId('resolve-early-submit').click()
+    await page.waitForURL(new RegExp(`/markets/${String(marketId)}(?:-[^/]*)?$`))
+    await expect(page.getByTestId('market-resolved')).toBeVisible()
+
+    const payouts = page.getByTestId('payouts')
+    await expect(payouts.locator('li', { hasText: ADMIN.name })).toContainText('+$1.00')
+    await expect(payouts.locator('li', { hasText: MEMBER.name })).toContainText('-$1.00')
   })
 
   test('a member who is neither oracle nor admin cannot reach the resolve screen', async ({

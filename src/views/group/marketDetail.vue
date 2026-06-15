@@ -92,6 +92,10 @@ const winnerName = computed(() => {
 const openForTrading = computed(
   () => market.value !== null && market.value.status === 'open' && !market.value.locked,
 )
+// Scheduled markets close at a set time; open-ended markets trade until resolved.
+const isScheduled = computed(
+  () => market.value?.kind === 'scheduled' && market.value.locksAt !== null,
+)
 const canResolve = computed(() => {
   const membership = groupStore.membership
   if (market.value === null || membership === null) return false
@@ -134,7 +138,7 @@ function startEditing(): void {
   if (loaded === null) return
   editForm.title = loaded.title
   editForm.description = loaded.description ?? ''
-  editForm.locksAt = new Date(loaded.locksAt)
+  editForm.locksAt = loaded.locksAt === null ? null : new Date(loaded.locksAt)
   editing.value = true
 }
 
@@ -389,8 +393,18 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
             <span>{{ t('marketDetail.createdBy', { name: market.creator.name }) }}</span>
             <span>{{ t('marketDetail.oracle', { name: market.oracle.name }) }}</span>
           </p>
-          <p v-if="openForTrading" class="meta">
+          <p v-if="openForTrading && isScheduled && market.locksAt !== null" class="meta">
             {{ t('marketDetail.locksAt', { date: d(market.locksAt, 'long'), countdown }) }}
+          </p>
+          <p v-else-if="openForTrading" class="meta">
+            {{ t('marketDetail.openEnded') }}
+          </p>
+          <p
+            v-if="market.resolutionEffectiveAt !== null"
+            class="meta"
+            data-testid="market-settled-as-of"
+          >
+            {{ t('marketDetail.settledAsOf', { date: d(market.resolutionEffectiveAt, 'long') }) }}
           </p>
 
           <p v-if="market.status === 'open' && market.locked" class="status-line">
@@ -473,7 +487,7 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
                 <field-errors field="description" :messages="editErrors.description ?? []" />
               </div>
 
-              <div class="form-field">
+              <div v-if="isScheduled" class="form-field">
                 <label for="market-edit-locks_at">{{ t('marketsNew.locksAtLabel') }}</label>
                 <DatePicker
                   v-model="editForm.locksAt"

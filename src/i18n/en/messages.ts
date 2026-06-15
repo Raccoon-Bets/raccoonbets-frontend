@@ -193,6 +193,7 @@ const en: LocaleMessage<VueMessageType> = {
   },
   market: {
     locksIn: 'Locks in {countdown}',
+    openEnded: 'Open until resolved',
     totalPool: 'Pool: {amount}',
     positionCount: 'no positions | 1 position | {count} positions',
     badge: {
@@ -207,6 +208,10 @@ const en: LocaleMessage<VueMessageType> = {
     titleLabel: 'Question',
     descriptionLabel: 'Description (optional)',
     descriptionHint: 'How will the oracle decide? Spell out the resolution criteria.',
+    kindLabel: 'Market type',
+    kindScheduled: 'Closes at a set time',
+    kindOpenEnded: 'Open-ended (resolve when it happens)',
+    kindHint: 'Open-ended markets keep trading until the oracle resolves them — no lock time.',
     locksAtLabel: 'Trading closes',
     outcomesLegend: 'Outcomes',
     outcomeLabel: 'Outcome {number}',
@@ -224,6 +229,8 @@ const en: LocaleMessage<VueMessageType> = {
     createdBy: 'Created by {name}',
     oracle: 'Oracle: {name}',
     locksAt: 'Trading closes {date} ({countdown})',
+    openEnded: 'Open-ended — trades until the oracle resolves it.',
+    settledAsOf: 'Settled as of {date}.',
     lockedNotice: 'Trading is closed. Awaiting resolution by {name}.',
     resolvedNotice: 'Resolved.',
     resolvedWinnerNotice: 'Resolved — winning outcome: {name}.',
@@ -272,6 +279,12 @@ const en: LocaleMessage<VueMessageType> = {
     resolveLegend: 'Winning outcome',
     resolveButton: 'Resolve market',
     resolvedNotice: 'Resolved to {outcome}.',
+    earlyTitle: 'Resolve now',
+    earlyHint:
+      'Settle the pool as it stood at the cutoff below. Bets placed or raised after that time are excluded from payouts.',
+    earlyLegend: 'Winning outcome',
+    effectiveAtLabel: 'Outcome became known at',
+    resolveEarlyButton: 'Resolve as of this time',
     correctTitle: 'Correct the outcome',
     correctHint: 'Reverses the payouts and replays them for the new outcome. Admins only.',
     correctLegend: 'Corrected winning outcome',
@@ -384,6 +397,7 @@ const en: LocaleMessage<VueMessageType> = {
     pastEmpty: 'No past positions yet.',
     amount: '{amount} on {outcome}',
     locksAt: 'Locks {date}',
+    openEnded: 'Open until resolved',
     error: 'Couldn’t load your positions: {error}',
   },
   settings: {

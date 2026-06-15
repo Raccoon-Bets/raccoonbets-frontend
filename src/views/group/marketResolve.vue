@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import Button from 'primevue/button'
+import DatePicker from 'primevue/datepicker'
 import Message from 'primevue/message'
 import RadioButton from 'primevue/radiobutton'
 import config from '@/config'
@@ -75,6 +76,11 @@ watch([market, () => groupStore.membership], ([loaded, membership]) => {
 
 const { countdown } = useCountdown(() => market.value?.locksAt ?? new Date(0))
 
+// Scheduled markets show a countdown to lock; open-ended markets have no lock time.
+const isScheduled = computed(
+  () => market.value?.kind === 'scheduled' && market.value.locksAt !== null,
+)
+
 const winnerName = computed(() => {
   const winnerId = market.value?.winningOutcomeId ?? null
   if (winnerId === null) return null
@@ -87,10 +93,16 @@ const winnerName = computed(() => {
 const canResolveNow = computed(
   () => market.value !== null && market.value.status === 'open' && market.value.locked,
 )
+// Resolving early settles the pool as of a chosen cutoff: open-ended markets (never locked) and
+// scheduled markets whose lock time hasn't passed both qualify.
+const canResolveEarly = computed(
+  () => market.value !== null && market.value.status === 'open' && !market.value.locked,
+)
 const canCorrect = computed(() => market.value?.status === 'resolved' && isAdmin.value)
 const canVoid = computed(() => market.value !== null && market.value.status !== 'voided')
 
 const outcomeId = ref<number | null>(null)
+const effectiveAt = ref<Date>(new Date())
 const correctableOutcomes = computed(() =>
   (market.value?.outcomes ?? []).filter((outcome) => outcome.id !== market.value?.winningOutcomeId),
 )
@@ -114,6 +126,16 @@ const {
 } = useFormErrorHandling(() => withChosenOutcome((id) => marketStore.resolve(id)), backToMarket)
 
 const {
+  submitHandler: resolveEarlyHandler,
+  errors: resolveEarlyErrors,
+  error: resolveEarlyError,
+  isProcessing: isResolvingEarly,
+} = useFormErrorHandling(
+  () => withChosenOutcome((id) => marketStore.resolve(id, effectiveAt.value)),
+  backToMarket,
+)
+
+const {
   submitHandler: correctHandler,
   errors: correctErrors,
   error: correctError,
@@ -133,10 +155,13 @@ async function voidHandler(): Promise<void> {
 
 const actionErrors = computed(() => [
   ...Object.values(resolveErrors.value).flat(),
+  ...Object.values(resolveEarlyErrors.value).flat(),
   ...Object.values(correctErrors.value).flat(),
   ...Object.values(voidErrors.value).flat(),
 ])
-const thrownError = computed(() => resolveError.value ?? correctError.value ?? voidError.value)
+const thrownError = computed(
+  () => resolveError.value ?? resolveEarlyError.value ?? correctError.value ?? voidError.value,
+)
 
 const URL = config.APIURL + groupPath(`/markets/${String(marketId.value)}/resolution`)
 </script>
@@ -187,7 +212,7 @@ const URL = config.APIURL + groupPath(`/markets/${String(marketId.value)}/resolu
           </Message>
 
           <Message
-            v-if="market.status === 'open' && !market.locked"
+            v-if="canResolveEarly && isScheduled"
             severity="info"
             class="inline-message"
             data-testid="still-open"
@@ -240,6 +265,54 @@ const URL = config.APIURL + groupPath(`/markets/${String(marketId.value)}/resolu
               />
             </div>
           </form>
+
+          <section v-if="canResolveEarly && !canResolveNow">
+            <h3>{{ t('resolve.earlyTitle') }}</h3>
+            <p class="hint">{{ t('resolve.earlyHint') }}</p>
+            <form
+              method="post"
+              :action="URL"
+              data-testid="resolve-early-form"
+              @submit.prevent="resolveEarlyHandler"
+            >
+              <fieldset class="outcome-fieldset">
+                <legend>{{ t('resolve.earlyLegend') }}</legend>
+                <div v-for="outcome in market.outcomes" :key="outcome.id" class="outcome-choice">
+                  <RadioButton
+                    v-model="outcomeId"
+                    :input-id="`resolve-early-outcome-input-${outcome.id}`"
+                    name="outcome_id"
+                    :value="outcome.id"
+                    :data-testid="`resolve-early-outcome-${outcome.id}`"
+                  />
+                  <label :for="`resolve-early-outcome-input-${outcome.id}`">{{
+                    outcome.name
+                  }}</label>
+                </div>
+              </fieldset>
+              <div class="form-field">
+                <label for="resolve-effective-at">{{ t('resolve.effectiveAtLabel') }}</label>
+                <DatePicker
+                  v-model="effectiveAt"
+                  input-id="resolve-effective-at"
+                  show-time
+                  hour-format="12"
+                  date-format="yy-mm-dd"
+                  required
+                  fluid
+                  :pt="{ pcInputText: { root: { 'data-testid': 'resolve-effective-at' } } }"
+                />
+              </div>
+              <div class="actions">
+                <Button
+                  type="submit"
+                  :label="t('resolve.resolveEarlyButton')"
+                  :disabled="isResolvingEarly"
+                  data-testid="resolve-early-submit"
+                />
+              </div>
+            </form>
+          </section>
 
           <section v-if="canCorrect">
             <h3>{{ t('resolve.correctTitle') }}</h3>

@@ -193,11 +193,16 @@ export async function fillNumberInput(input: Locator, value: string): Promise<vo
 export async function createMarket(
   page: Page,
   title: string,
-  options: { outcomes?: string[]; oracleName?: string } = {},
+  options: { outcomes?: string[]; oracleName?: string; openEnded?: boolean } = {},
 ): Promise<number> {
   await page.goto(`${GROUP_URL}/markets/new`)
   await page.getByTestId('market-title').fill(title)
-  await page.getByTestId('market-locks-at').fill(locksAtValue(30))
+  if (options.openEnded === true) {
+    await page.getByTestId('market-kind').click()
+    await page.getByRole('option', { name: /Open-ended/ }).click()
+  } else {
+    await page.getByTestId('market-locks-at').fill(locksAtValue(30))
+  }
   for (const [index, name] of (options.outcomes ?? []).entries()) {
     if (index >= 2) await page.getByTestId('market-add-outcome').click()
     await page.getByTestId(`market-outcome-${String(index)}`).fill(name)

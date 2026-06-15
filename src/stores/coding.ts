@@ -259,7 +259,9 @@ const marketSchema = z.object({
   title: z.string(),
   status: z.enum(['open', 'resolved', 'voided']),
   locked: z.boolean(),
-  locks_at: z.string(),
+  kind: z.enum(['scheduled', 'open_ended']),
+  locks_at: z.string().nullable(),
+  resolution_effective_at: z.string().nullish(),
   created_at: z.string(),
   currency: z.string(),
   creator: memberRefSchema,
@@ -308,7 +310,11 @@ function marketFromParsed(parsed: MarketJSONDown): Market {
     title: parsed.title,
     status: parsed.status,
     locked: parsed.locked,
-    locksAt: new Date(parsed.locks_at),
+    kind: parsed.kind,
+    locksAt: parsed.locks_at === null ? null : new Date(parsed.locks_at),
+    resolutionEffectiveAt: parsed.resolution_effective_at
+      ? new Date(parsed.resolution_effective_at)
+      : null,
     createdAt: new Date(parsed.created_at),
     currency: parsed.currency,
     creator: parsed.creator,
@@ -389,7 +395,8 @@ function positionFromParsed(parsed: z.infer<typeof positionSchema>): Position {
 export interface MarketJSONUp {
   title: string
   description: string
-  locks_at: string
+  locks_at?: string
+  kind?: 'scheduled' | 'open_ended'
   outcomes: string[]
   oracle_id?: number
 }

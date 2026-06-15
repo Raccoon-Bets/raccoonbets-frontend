@@ -160,8 +160,14 @@ export interface Market {
   /** Whether trading has closed because {@link locksAt} passed while the market is still open. */
   locked: boolean
 
-  /** When trading closes. */
-  locksAt: Date
+  /** Whether the market closes at a set time (`scheduled`) or trades until resolved (`open_ended`). */
+  kind: 'scheduled' | 'open_ended'
+
+  /** When trading closes; null for open-ended markets, which trade until resolved. */
+  locksAt: Date | null
+
+  /** When an early resolution settled the pool as of; null otherwise. */
+  resolutionEffectiveAt: Date | null
 
   /** When the market was created. */
   createdAt: Date

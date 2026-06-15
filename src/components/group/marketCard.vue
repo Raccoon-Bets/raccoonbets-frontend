@@ -20,7 +20,11 @@ const props = defineProps<Props>()
 
 const { t } = useI18n()
 const { format } = useMoney()
-const { countdown, urgency } = useCountdown(() => props.market.locksAt)
+const { countdown, urgency } = useCountdown(() => props.market.locksAt ?? new Date(0))
+
+const isScheduled = computed(
+  () => props.market.kind === 'scheduled' && props.market.locksAt !== null,
+)
 
 // Normal urgency keeps the pill on brand; warning/alert escalate as lock approaches.
 const LOCK_PILL_TONES: Record<CountdownUrgency, 'primary' | 'warning' | 'alert'> = {
@@ -65,8 +69,11 @@ function multiplierFor(poolCents: number): string | null {
     :class="{ voided: market.status === 'voided' }"
     :data-testid="`market-card-${market.id}`"
   >
-    <sticker-badge v-if="openForTrading" :tone="lockPillTone" overlap>
+    <sticker-badge v-if="openForTrading && isScheduled" :tone="lockPillTone" overlap>
       {{ t('market.locksIn', { countdown }) }}
+    </sticker-badge>
+    <sticker-badge v-else-if="openForTrading" tone="primary" overlap>
+      {{ t('market.openEnded') }}
     </sticker-badge>
     <sticker-badge v-else :tone="badgeTone" overlap>
       {{ t(`market.badge.${badge}`) }}

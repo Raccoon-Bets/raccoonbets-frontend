@@ -97,7 +97,10 @@ function amountLine(market: Market): string {
                 {{ market.title }}
               </router-link>
               <span>{{ amountLine(market) }}</span>
-              <small>{{ t('myPositions.locksAt', { date: d(market.locksAt, 'long') }) }}</small>
+              <small v-if="market.locksAt !== null">
+                {{ t('myPositions.locksAt', { date: d(market.locksAt, 'long') }) }}
+              </small>
+              <small v-else>{{ t('myPositions.openEnded') }}</small>
             </li>
           </ul>
         </sticker-card>

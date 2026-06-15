@@ -31,14 +31,27 @@ const marketStore = useMarketStore()
 const marketsStore = useMarketsStore()
 useGroupGuard()
 
-const form = reactive({
+const form = reactive<{
+  title: string
+  description: string
+  kind: 'scheduled' | 'open_ended'
+  locksAt: Date | null
+  outcomes: string[]
+  oracleId: number | null
+}>({
   title: '',
   description: '',
+  kind: 'scheduled',
   // A local-time Date from the picker; converted to ISO 8601 on submit.
-  locksAt: null as Date | null,
+  locksAt: null,
   outcomes: ['YES', 'NO'],
-  oracleId: null as number | null,
+  oracleId: null,
 })
+
+const kindOptions = computed(() => [
+  { value: 'scheduled', label: t('marketsNew.kindScheduled') },
+  { value: 'open_ended', label: t('marketsNew.kindOpenEnded') },
+])
 
 watch(
   () => groupStore.isMember,
@@ -62,8 +75,11 @@ function payload(): MarketJSONUp {
   const attributes: MarketJSONUp = {
     title: form.title,
     description: form.description,
-    locks_at: form.locksAt === null ? '' : form.locksAt.toISOString(),
+    kind: form.kind,
     outcomes: form.outcomes.map((name) => name.trim()).filter((name) => name !== ''),
+  }
+  if (form.kind === 'scheduled') {
+    attributes.locks_at = form.locksAt === null ? '' : form.locksAt.toISOString()
   }
   if (form.oracleId !== null) attributes.oracle_id = form.oracleId
   return attributes
@@ -123,6 +139,20 @@ const URL = config.APIURL + groupPath('/markets')
           <p class="hint">{{ t('marketsNew.descriptionHint') }}</p>
 
           <div class="form-field">
+            <label for="market-kind">{{ t('marketsNew.kindLabel') }}</label>
+            <Select
+              v-model="form.kind"
+              input-id="market-kind"
+              :options="kindOptions"
+              option-label="label"
+              option-value="value"
+              fluid
+              data-testid="market-kind"
+            />
+          </div>
+          <p class="hint">{{ t('marketsNew.kindHint') }}</p>
+
+          <div v-if="form.kind === 'scheduled'" class="form-field">
             <label for="market-locks_at">{{ t('marketsNew.locksAtLabel') }}</label>
             <DatePicker
               v-model="form.locksAt"
