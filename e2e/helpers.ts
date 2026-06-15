@@ -160,8 +160,8 @@ export async function joinViaInvitation(page: Page, name: string, email: string)
 }
 
 /**
- * Formats a time `minutesFromNow` as the DatePicker's input value
- * (`yy-mm-dd hh:mm AM/PM`, local — the picker is in 12-hour mode).
+ * Formats a time `minutesFromNow` as the DatePicker's input value, matching the en-US locale
+ * format the picker derives via Intl (`mm/dd/yyyy hh:mm AM/PM`, local 12-hour).
  */
 export function locksAtValue(minutesFromNow: number): string {
   const date = new Date(Date.now() + minutesFromNow * 60_000)
@@ -169,7 +169,7 @@ export function locksAtValue(minutesFromNow: number): string {
   const hours24 = date.getHours()
   const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12
   const meridiem = hours24 < 12 ? 'AM' : 'PM'
-  return `${String(date.getFullYear())}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
+  return `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${String(date.getFullYear())} ${pad(
     hours12,
   )}:${pad(date.getMinutes())} ${meridiem}`
 }

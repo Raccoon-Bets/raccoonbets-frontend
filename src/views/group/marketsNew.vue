@@ -13,6 +13,7 @@ import FieldErrors from '@/components/fieldErrors.vue'
 import FormField from '@/components/formField.vue'
 import GroupShell from '@/components/group/groupShell.vue'
 import StickerCard from '@/components/sticker/stickerCard.vue'
+import useDatePickerFormat from '@/composables/useDatePickerFormat'
 import useFormErrorHandling from '@/composables/useFormErrorHandling'
 import useGroupGuard from '@/composables/useGroupGuard'
 import type { MarketJSONUp } from '@/stores/coding'
@@ -30,6 +31,7 @@ const membersStore = useMembersStore()
 const marketStore = useMarketStore()
 const marketsStore = useMarketsStore()
 useGroupGuard()
+const { dateFormat, hourFormat } = useDatePickerFormat()
 
 const form = reactive<{
   title: string
@@ -158,8 +160,10 @@ const URL = config.APIURL + groupPath('/markets')
               v-model="form.locksAt"
               input-id="market-locks_at"
               show-time
-              hour-format="12"
-              date-format="yy-mm-dd"
+              :hour-format="hourFormat"
+              :date-format="dateFormat"
+              show-icon
+              icon-display="input"
               required
               fluid
               :invalid="(errors.locks_at?.length ?? 0) > 0"

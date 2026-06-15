@@ -11,6 +11,7 @@ import GroupShell from '@/components/group/groupShell.vue'
 import StickerCard from '@/components/sticker/stickerCard.vue'
 import useChannel, { channelEventSchema } from '@/composables/useChannel'
 import useCountdown from '@/composables/useCountdown'
+import useDatePickerFormat from '@/composables/useDatePickerFormat'
 import useFormErrorHandling from '@/composables/useFormErrorHandling'
 import useGroupGuard from '@/composables/useGroupGuard'
 import { useGroupStore } from '@/stores/modules/group'
@@ -103,6 +104,7 @@ const canVoid = computed(() => market.value !== null && market.value.status !== 
 
 const outcomeId = ref<number | null>(null)
 const effectiveAt = ref<Date>(new Date())
+const { dateFormat, hourFormat } = useDatePickerFormat()
 const correctableOutcomes = computed(() =>
   (market.value?.outcomes ?? []).filter((outcome) => outcome.id !== market.value?.winningOutcomeId),
 )
@@ -296,8 +298,10 @@ const URL = config.APIURL + groupPath(`/markets/${String(marketId.value)}/resolu
                   v-model="effectiveAt"
                   input-id="resolve-effective-at"
                   show-time
-                  hour-format="12"
-                  date-format="yy-mm-dd"
+                  :hour-format="hourFormat"
+                  :date-format="dateFormat"
+                  show-icon
+                  icon-display="input"
                   required
                   fluid
                   :pt="{ pcInputText: { root: { 'data-testid': 'resolve-effective-at' } } }"

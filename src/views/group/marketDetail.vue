@@ -17,6 +17,7 @@ import StickerBadge from '@/components/sticker/stickerBadge.vue'
 import StickerCard from '@/components/sticker/stickerCard.vue'
 import useChannel, { channelEventSchema } from '@/composables/useChannel'
 import useCountdown, { type CountdownUrgency } from '@/composables/useCountdown'
+import useDatePickerFormat from '@/composables/useDatePickerFormat'
 import useFormErrorHandling from '@/composables/useFormErrorHandling'
 import useGroupGuard from '@/composables/useGroupGuard'
 import useMoney from '@/composables/useMoney'
@@ -71,6 +72,7 @@ useCanonicalMarketURL(() => market.value)
 
 const { format } = useMoney()
 const { countdown, urgency } = useCountdown(() => market.value?.locksAt ?? new Date(0))
+const { dateFormat, hourFormat } = useDatePickerFormat()
 
 // Normal urgency keeps the pill on brand; warning/alert escalate as lock approaches.
 const LOCK_PILL_TONES: Record<CountdownUrgency, 'primary' | 'warning' | 'alert'> = {
@@ -493,8 +495,10 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
                   v-model="editForm.locksAt"
                   input-id="market-edit-locks_at"
                   show-time
-                  hour-format="12"
-                  date-format="yy-mm-dd"
+                  :hour-format="hourFormat"
+                  :date-format="dateFormat"
+                  show-icon
+                  icon-display="input"
                   required
                   fluid
                   :invalid="(editErrors.locks_at?.length ?? 0) > 0"
