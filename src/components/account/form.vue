@@ -25,17 +25,23 @@ const user: UserJSONUp = reactive({
 })
 
 // v-model needs strings; empty submits as null so the backend clears the handle.
-function handleModel(field: 'venmo_handle' | 'paypal_handle' | 'cashapp_cashtag') {
+// Handles are stored bare, so strip a pasted sigil before it reaches the model.
+function handleModel(
+  field: 'venmo_handle' | 'paypal_handle' | 'cashapp_cashtag',
+  prefix: string,
+) {
   return computed({
     get: () => user[field] ?? '',
     set: (value: string) => {
-      user[field] = value.trim() === '' ? null : value
+      let handle = value.trim()
+      if (handle.startsWith(prefix)) handle = handle.slice(prefix.length).trim()
+      user[field] = handle === '' ? null : handle
     },
   })
 }
-const venmoHandle = handleModel('venmo_handle')
-const paypalHandle = handleModel('paypal_handle')
-const cashappCashtag = handleModel('cashapp_cashtag')
+const venmoHandle = handleModel('venmo_handle', '@')
+const paypalHandle = handleModel('paypal_handle', 'paypal.me/')
+const cashappCashtag = handleModel('cashapp_cashtag', '$')
 
 const success = ref(false)
 const { submitHandler, errors, error, isProcessing } = useFormErrorHandling(
@@ -123,8 +129,12 @@ watch(
       type="text"
       object="user"
       field="venmo_handle"
+      prefix="@"
       :errors="errors"
       :label="t('account.paymentHandles.venmo')"
+      :placeholder="t('account.paymentHandles.venmoPlaceholder')"
+      maxlength="30"
+      autocomplete="off"
       data-testid="account-venmo"
     />
 
@@ -133,8 +143,12 @@ watch(
       type="text"
       object="user"
       field="paypal_handle"
+      prefix="paypal.me/"
       :errors="errors"
       :label="t('account.paymentHandles.paypal')"
+      :placeholder="t('account.paymentHandles.paypalPlaceholder')"
+      maxlength="20"
+      autocomplete="off"
       data-testid="account-paypal"
     />
 
@@ -143,8 +157,12 @@ watch(
       type="text"
       object="user"
       field="cashapp_cashtag"
+      prefix="$"
       :errors="errors"
       :label="t('account.paymentHandles.cashapp')"
+      :placeholder="t('account.paymentHandles.cashappPlaceholder')"
+      maxlength="20"
+      autocomplete="off"
       data-testid="account-cashapp"
     />
 

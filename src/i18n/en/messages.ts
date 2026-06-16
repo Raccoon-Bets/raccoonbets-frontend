@@ -92,6 +92,9 @@ const en: LocaleMessage<VueMessageType> = {
       venmo: 'Venmo handle',
       paypal: 'PayPal.Me handle',
       cashapp: 'Cash App cashtag',
+      venmoPlaceholder: 'jane-smith',
+      paypalPlaceholder: 'janesmith',
+      cashappPlaceholder: 'janesmith',
     },
     passkeys: {
       title: 'Passkeys',

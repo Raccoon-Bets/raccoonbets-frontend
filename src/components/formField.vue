@@ -2,6 +2,8 @@
 import { computed, useAttrs } from 'vue'
 import type { InputHTMLAttributes } from 'vue'
 import InputText from 'primevue/inputtext'
+import InputGroup from 'primevue/inputgroup'
+import InputGroupAddon from 'primevue/inputgroupaddon'
 import Password from 'primevue/password'
 import FieldErrors from '@/components/fieldErrors.vue'
 import type { Errors } from '@/stores/types'
@@ -19,6 +21,9 @@ interface Props {
   /** The label text. */
   label: string
 
+  /** A read-only sigil shown before the input (e.g. `@` or `$`). Ignored for passwords. */
+  prefix?: string
+
   /** Backend validation errors keyed by field name. */
   errors?: Errors
 }
@@ -27,6 +32,7 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(defineProps<Props>(), {
   type: 'text',
+  prefix: undefined,
   errors: undefined,
 })
 
@@ -58,6 +64,18 @@ const hasError = computed(() => errorMessages.value.length > 0)
       fluid
       :input-props="attrs"
     />
+    <InputGroup v-else-if="prefix">
+      <InputGroupAddon>{{ prefix }}</InputGroupAddon>
+      <InputText
+        v-bind="$attrs"
+        :id="id"
+        v-model="modelValue"
+        :type="type"
+        :name="name"
+        :invalid="hasError"
+        fluid
+      />
+    </InputGroup>
     <InputText
       v-else
       v-bind="$attrs"
