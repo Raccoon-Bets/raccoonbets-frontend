@@ -429,26 +429,6 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
             </sticker-badge>
           </p>
 
-          <p v-if="canResolve">
-            <router-link
-              :to="{ name: 'marketResolve', params: { marketId: marketPath(market) } }"
-              data-testid="resolve-link"
-            >
-              {{ t('marketDetail.resolveLink') }}
-            </router-link>
-          </p>
-
-          <p v-if="canEdit && !editing">
-            <Button
-              type="button"
-              severity="secondary"
-              size="small"
-              :label="t('marketDetail.editLink')"
-              data-testid="market-edit-toggle"
-              @click="startEditing"
-            />
-          </p>
-
           <section v-if="canEdit && editing" class="edit-form" data-testid="market-edit-form">
             <h2 class="section-head">{{ t('marketDetail.editTitle') }}</h2>
 
@@ -533,18 +513,40 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
           >
             {{ t('marketDetail.deleteError', { error: deleteError }) }}
           </Message>
-          <p v-if="canDelete && !editing">
+          <div
+            v-if="canResolve || (!editing && (canEdit || canDelete))"
+            class="market-actions"
+          >
+            <router-link
+              v-if="canResolve"
+              :to="{ name: 'marketResolve', params: { marketId: marketPath(market) } }"
+              data-testid="resolve-link"
+            >
+              {{ t('marketDetail.resolveLink') }}
+            </router-link>
             <Button
+              v-if="canEdit && !editing"
+              type="button"
+              severity="secondary"
+              size="small"
+              icon="pi pi-pencil"
+              :aria-label="t('marketDetail.editLink')"
+              data-testid="market-edit-toggle"
+              @click="startEditing"
+            />
+            <Button
+              v-if="canDelete && !editing"
               type="button"
               severity="danger"
               outlined
               size="small"
-              :label="t('marketDetail.deleteLink')"
+              icon="pi pi-trash"
+              :aria-label="t('marketDetail.deleteLink')"
               :disabled="isDeleting"
               data-testid="market-delete"
               @click="deleteMarket"
             />
-          </p>
+          </div>
         </sticker-card>
 
         <sticker-card class="detail-section">
@@ -636,6 +638,16 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
                 :disabled="isProcessing"
                 data-testid="position-submit"
               />
+              <Button
+                v-if="market.myPosition"
+                type="button"
+                severity="danger"
+                outlined
+                :label="t('orderSlip.cancelButton')"
+                :disabled="isCancelling"
+                data-testid="position-cancel"
+                @click="cancelHandler"
+              />
             </div>
           </form>
 
@@ -647,16 +659,6 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
           >
             {{ t('orderSlip.cancelError', { error: cancelError }) }}
           </Message>
-          <Button
-            v-if="market.myPosition"
-            type="button"
-            severity="danger"
-            outlined
-            :label="t('orderSlip.cancelButton')"
-            :disabled="isCancelling"
-            data-testid="position-cancel"
-            @click="cancelHandler"
-          />
         </sticker-card>
 
         <sticker-card
@@ -716,16 +718,17 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
               <span class="name">{{ position.member.name }}</span>
               <span>{{ outcomeNames.get(position.outcomeId) }}</span>
               <span>{{ format(position.amountCents, market.currency) }}</span>
-              <small v-if="isMyPosition(position.member.id)">{{
-                t('marketDetail.myPositionTag')
-              }}</small>
+              <sticker-badge v-if="isMyPosition(position.member.id)" tone="info" :tilt="0">
+                {{ t('marketDetail.myPositionTag') }}
+              </sticker-badge>
               <Button
                 v-if="canCancelPosition(position.member.id)"
                 type="button"
                 size="small"
                 severity="danger"
                 outlined
-                :label="t('marketDetail.cancelPositionButton')"
+                icon="pi pi-trash"
+                :aria-label="t('marketDetail.cancelPositionLabel', { name: position.member.name })"
                 :disabled="isCancellingPosition"
                 :data-testid="`position-${position.id}-admin-cancel`"
                 @click="cancelMemberPosition(position)"
@@ -764,7 +767,8 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
                   size="small"
                   severity="danger"
                   outlined
-                  :label="t('marketDetail.comments.deleteButton')"
+                  icon="pi pi-trash"
+                  :aria-label="t('marketDetail.comments.deleteLabel', { author: comment.author.name })"
                   :disabled="isDeletingComment"
                   :data-testid="`comment-${comment.id}-delete`"
                   @click="removeComment(comment)"
@@ -835,6 +839,19 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
   margin: var(--spacing-md) 0;
 }
 
+// Resolve / void sits at the left; the edit and delete icons hug the right.
+.market-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+
+  a {
+    margin-right: auto;
+  }
+}
+
 ul.payouts,
 ul.events,
 ul.outcomes,
@@ -845,6 +862,7 @@ ul.positions {
 
   li {
     display: flex;
+    align-items: center;
     gap: var(--spacing-md);
     padding: var(--spacing-xs) 0;
     border-bottom: 1px solid var(--p-content-border-color);
@@ -866,6 +884,14 @@ ul.positions {
       color: var(--p-red-500);
     }
   }
+}
+
+// Baloo 2's glyph midline sits below its em-box midline, so the centered badge
+// reads as optically low against the body-font row. Box/baseline alignment
+// can't see the optical center (only `text-box-trim` could, but that's not yet
+// safe cross-browser), so nudge the badge up to restore visual centering.
+ul.positions :deep(.sticker-badge) {
+  transform: translateY(-2px);
 }
 
 ul.comments {

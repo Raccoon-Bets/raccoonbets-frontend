@@ -238,35 +238,36 @@ const URL = config.APIURL + groupPath(`/markets/${String(marketId.value)}/resolu
             {{ t('resolve.resolvedNotice', { outcome: winnerName ?? '' }) }}
           </Message>
 
-          <form
-            v-if="canResolveNow"
-            method="post"
-            :action="URL"
-            data-testid="resolve-form"
-            @submit.prevent="resolveHandler"
-          >
-            <fieldset class="outcome-fieldset">
-              <legend>{{ t('resolve.resolveLegend') }}</legend>
-              <div v-for="outcome in market.outcomes" :key="outcome.id" class="outcome-choice">
-                <RadioButton
-                  v-model="outcomeId"
-                  :input-id="`resolve-outcome-input-${outcome.id}`"
-                  name="outcome_id"
-                  :value="outcome.id"
-                  :data-testid="`resolve-outcome-${outcome.id}`"
+          <section v-if="canResolveNow">
+            <form
+              method="post"
+              :action="URL"
+              data-testid="resolve-form"
+              @submit.prevent="resolveHandler"
+            >
+              <fieldset class="outcome-fieldset">
+                <legend>{{ t('resolve.resolveLegend') }}</legend>
+                <div v-for="outcome in market.outcomes" :key="outcome.id" class="outcome-choice">
+                  <RadioButton
+                    v-model="outcomeId"
+                    :input-id="`resolve-outcome-input-${outcome.id}`"
+                    name="outcome_id"
+                    :value="outcome.id"
+                    :data-testid="`resolve-outcome-${outcome.id}`"
+                  />
+                  <label :for="`resolve-outcome-input-${outcome.id}`">{{ outcome.name }}</label>
+                </div>
+              </fieldset>
+              <div class="actions">
+                <Button
+                  type="submit"
+                  :label="t('resolve.resolveButton')"
+                  :disabled="isResolving"
+                  data-testid="resolve-submit"
                 />
-                <label :for="`resolve-outcome-input-${outcome.id}`">{{ outcome.name }}</label>
               </div>
-            </fieldset>
-            <div class="actions">
-              <Button
-                type="submit"
-                :label="t('resolve.resolveButton')"
-                :disabled="isResolving"
-                data-testid="resolve-submit"
-              />
-            </div>
-          </form>
+            </form>
+          </section>
 
           <section v-if="canResolveEarly && !canResolveNow">
             <h3>{{ t('resolve.earlyTitle') }}</h3>
@@ -381,17 +382,12 @@ const URL = config.APIURL + groupPath(`/markets/${String(marketId.value)}/resolu
 </template>
 
 <style scoped lang="scss">
-section {
-  margin-bottom: var(--spacing-lg);
-}
-
 .back-nav {
   margin-bottom: var(--spacing-md);
 }
 
 .outcome-fieldset {
   padding: 0;
-  margin: 0 0 var(--spacing-md);
   border: none;
 
   legend {
@@ -406,5 +402,33 @@ section {
   gap: var(--spacing-sm);
   align-items: center;
   margin-bottom: var(--spacing-xs);
+}
+
+// Each section is one group; the large bottom margin sets the two groups
+// distinctly apart, while a single small gap keeps spacing inside a group
+// consistent (heading, hint, controls all the same distance).
+section {
+  margin-bottom: var(--spacing-lg);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  h3 {
+    margin: 0 0 var(--spacing-sm);
+  }
+
+  .hint {
+    margin: 0 0 var(--spacing-sm);
+  }
+
+  .outcome-fieldset,
+  .form-field {
+    margin: 0 0 var(--spacing-sm);
+  }
+
+  .actions {
+    margin: 0;
+  }
 }
 </style>

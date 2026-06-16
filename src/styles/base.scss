@@ -101,6 +101,12 @@ small {
   color: var(--rb-muted);
 }
 
+// Tie a hint paragraph tightly to the field above it; the field's own bottom
+// margin then provides the separation to the next field.
+p.hint {
+  margin: var(--spacing-xs) 0 0;
+}
+
 .inline-message {
   margin: 0 0 var(--spacing-md);
 }

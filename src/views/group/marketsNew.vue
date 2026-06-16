@@ -137,8 +137,8 @@ const URL = config.APIURL + groupPath('/markets')
               data-testid="market-description"
             />
             <field-errors field="description" :messages="errors.description ?? []" />
+            <p class="hint">{{ t('marketsNew.descriptionHint') }}</p>
           </div>
-          <p class="hint">{{ t('marketsNew.descriptionHint') }}</p>
 
           <div class="form-field">
             <label for="market-kind">{{ t('marketsNew.kindLabel') }}</label>
@@ -151,8 +151,8 @@ const URL = config.APIURL + groupPath('/markets')
               fluid
               data-testid="market-kind"
             />
+            <p class="hint">{{ t('marketsNew.kindHint') }}</p>
           </div>
-          <p class="hint">{{ t('marketsNew.kindHint') }}</p>
 
           <div v-if="form.kind === 'scheduled'" class="form-field">
             <label for="market-locks_at">{{ t('marketsNew.locksAtLabel') }}</label>
@@ -223,8 +223,8 @@ const URL = config.APIURL + groupPath('/markets')
               data-testid="market-oracle"
             />
             <field-errors field="oracle" :messages="errors.oracle ?? []" />
+            <p class="hint">{{ t('marketsNew.oracleHint') }}</p>
           </div>
-          <p class="hint">{{ t('marketsNew.oracleHint') }}</p>
 
           <div class="actions">
             <Button

@@ -89,36 +89,42 @@ const URL = config.APIURL + groupPath('')
         </Message>
 
         <form method="patch" :action="URL" @submit.prevent="submitHandler">
-          <form-field
-            v-model="form.name"
-            type="text"
-            object="group"
-            field="name"
-            :errors="errors"
-            :label="t('settings.name')"
-            required
-            data-testid="settings-name"
-          />
+          <fieldset class="field-group">
+            <legend>{{ t('settings.detailsLegend') }}</legend>
+            <form-field
+              v-model="form.name"
+              type="text"
+              object="group"
+              field="name"
+              :errors="errors"
+              :label="t('settings.name')"
+              required
+              data-testid="settings-name"
+            />
+          </fieldset>
 
-          <money-field
-            v-model="form.minAmount"
-            :currency="currency"
-            input-id="group-min_amount_cents"
-            field="min_amount_cents"
-            :label="t('settings.minAmount')"
-            :errors="errors"
-            testid="settings-min-amount"
-          />
+          <fieldset class="field-group">
+            <legend>{{ t('settings.limitsLegend') }}</legend>
+            <money-field
+              v-model="form.minAmount"
+              :currency="currency"
+              input-id="group-min_amount_cents"
+              field="min_amount_cents"
+              :label="t('settings.minAmount')"
+              :errors="errors"
+              testid="settings-min-amount"
+            />
 
-          <money-field
-            v-model="form.maxAmount"
-            :currency="currency"
-            input-id="group-max_amount_cents"
-            field="max_amount_cents"
-            :label="t('settings.maxAmount')"
-            :errors="errors"
-            testid="settings-max-amount"
-          />
+            <money-field
+              v-model="form.maxAmount"
+              :currency="currency"
+              input-id="group-max_amount_cents"
+              field="max_amount_cents"
+              :label="t('settings.maxAmount')"
+              :errors="errors"
+              testid="settings-max-amount"
+            />
+          </fieldset>
 
           <div class="actions">
             <Button
@@ -133,3 +139,20 @@ const URL = config.APIURL + groupPath('')
     </group-shell>
   </main>
 </template>
+
+<style scoped lang="scss">
+// Group related fields under a labelled legend; the larger bottom margin sets
+// the groups apart while the fields inside keep their own spacing.
+.field-group {
+  padding: 0;
+  margin: 0 0 var(--spacing-lg);
+  border: none;
+
+  legend {
+    padding: 0;
+    margin-bottom: var(--spacing-sm);
+    font-family: var(--rb-font-display);
+    font-weight: 700;
+  }
+}
+</style>

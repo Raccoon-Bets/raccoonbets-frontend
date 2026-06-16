@@ -253,7 +253,7 @@ const en: LocaleMessage<VueMessageType> = {
     deleteConfirm:
       'Delete this market? All positions will be removed and their holders emailed. This can’t be undone.',
     deleteError: 'Couldn’t delete the market: {error}',
-    cancelPositionButton: 'Cancel position',
+    cancelPositionLabel: 'Cancel {name}’s position',
     cancelPositionConfirm: 'Cancel {name}’s {amount} position? They’ll be emailed about it.',
     cancelPositionError: 'Couldn’t cancel the position: {error}',
     payoutsTitle: 'Payouts',
@@ -269,7 +269,7 @@ const en: LocaleMessage<VueMessageType> = {
       bodyLabel: 'Add a comment',
       submit: 'Post comment',
       error: 'Couldn’t post your comment: {error}',
-      deleteButton: 'Delete',
+      deleteLabel: 'Delete {author}’s comment',
       deleteConfirm: 'Delete this comment? This can’t be undone.',
       deleteError: 'Couldn’t delete the comment: {error}',
     },
@@ -406,6 +406,8 @@ const en: LocaleMessage<VueMessageType> = {
   settings: {
     title: 'Group settings',
     notAdmin: 'Only group admins can change these settings.',
+    detailsLegend: 'Details',
+    limitsLegend: 'Bet limits',
     name: 'Group name',
     minAmount: 'Smallest amount',
     maxAmount: 'Largest amount',

@@ -137,7 +137,7 @@ const inviteURL = config.APIURL + groupPath('/invitations')
           :value="membersStore.members"
           data-testid="members-roster"
         >
-          <Column :header="t('members.columns.name')">
+          <Column :header="t('members.columns.name')" body-style="white-space: nowrap">
             <template #body="{ data }">
               <span class="name" :data-testid="`member-${data.id}`">{{ data.user.name }}</span>
               <small v-if="isMe(data)" class="you-tag">{{ t('members.youTag') }}</small>
@@ -157,7 +157,7 @@ const inviteURL = config.APIURL + groupPath('/invitations')
           <!-- Admins can act on themselves too (step down, leave); the backend
                rejects orphaning the group of its last admin and the 422
                surfaces in the shared action error line. -->
-          <Column v-if="isAdmin">
+          <Column v-if="isAdmin" body-style="width: 100%; text-align: right">
             <template #body="{ data }">
               <div class="row-actions">
                 <Button
@@ -172,8 +172,9 @@ const inviteURL = config.APIURL + groupPath('/invitations')
                   type="button"
                   size="small"
                   severity="danger"
-                  outlined
-                  :label="t('members.remove')"
+                  variant="text"
+                  icon="pi pi-trash"
+                  :aria-label="t('members.remove')"
                   :data-testid="`member-${data.id}-remove`"
                   @click="removeMember(data)"
                 />
@@ -328,8 +329,9 @@ const inviteURL = config.APIURL + groupPath('/invitations')
 }
 
 .row-actions {
-  display: flex;
+  display: inline-flex;
   gap: var(--spacing-sm);
+  align-items: center;
 }
 
 ul.roster {
