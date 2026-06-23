@@ -15,6 +15,9 @@ const en: LocaleMessage<VueMessageType> = {
     unknown: 'An unknown error occurred.',
     emptyBody: 'The server returned an empty response.',
   },
+  turnstile: {
+    loadError: 'Couldn’t load verification. Check your connection and reload the page.',
+  },
   user: {
     name: 'Name',
     email: 'Email address',
