@@ -26,10 +26,7 @@ const user: UserJSONUp = reactive({
 
 // v-model needs strings; empty submits as null so the backend clears the handle.
 // Handles are stored bare, so strip a pasted sigil before it reaches the model.
-function handleModel(
-  field: 'venmo_handle' | 'paypal_handle' | 'cashapp_cashtag',
-  prefix: string,
-) {
+function handleModel(field: 'venmo_handle' | 'paypal_handle' | 'cashapp_cashtag', prefix: string) {
   return computed({
     get: () => user[field] ?? '',
     set: (value: string) => {

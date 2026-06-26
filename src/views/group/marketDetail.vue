@@ -513,10 +513,7 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
           >
             {{ t('marketDetail.deleteError', { error: deleteError }) }}
           </Message>
-          <div
-            v-if="canResolve || (!editing && (canEdit || canDelete))"
-            class="market-actions"
-          >
+          <div v-if="canResolve || (!editing && (canEdit || canDelete))" class="market-actions">
             <router-link
               v-if="canResolve"
               :to="{ name: 'marketResolve', params: { marketId: marketPath(market) } }"
@@ -768,7 +765,9 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
                   severity="danger"
                   outlined
                   icon="pi pi-trash"
-                  :aria-label="t('marketDetail.comments.deleteLabel', { author: comment.author.name })"
+                  :aria-label="
+                    t('marketDetail.comments.deleteLabel', { author: comment.author.name })
+                  "
                   :disabled="isDeletingComment"
                   :data-testid="`comment-${comment.id}-delete`"
                   @click="removeComment(comment)"
