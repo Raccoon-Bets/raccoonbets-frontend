@@ -130,27 +130,26 @@ onBeforeUnmount(() => {
             :disabled="!turnstileToken || isProcessing"
             data-testid="login-submit"
           />
+          <Button
+            v-if="passkeysSupported"
+            type="button"
+            severity="secondary"
+            outlined
+            :label="t('auth.logIn.passkeyButton')"
+            data-testid="login-passkey"
+            @click="logInWithPasskey"
+          />
         </div>
       </form>
 
-      <template v-if="passkeysSupported">
-        <Button
-          type="button"
-          severity="secondary"
-          outlined
-          :label="t('auth.logIn.passkeyButton')"
-          data-testid="login-passkey"
-          @click="logInWithPasskey"
-        />
-        <Message
-          v-if="passkeyError"
-          severity="error"
-          class="inline-message"
-          data-testid="login-passkey-error"
-        >
-          {{ passkeyError }}
-        </Message>
-      </template>
+      <Message
+        v-if="passkeyError"
+        severity="error"
+        class="inline-message"
+        data-testid="login-passkey-error"
+      >
+        {{ passkeyError }}
+      </Message>
 
       <oauth-buttons />
 
