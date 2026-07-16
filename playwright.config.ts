@@ -23,39 +23,15 @@ export default defineConfig({
      { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
      { name: 'webkit', use: { ...devices['Desktop Safari'] } }, */
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  /* The full stack: SPA preview, Rails API (cypress env, with the __cypress__
-     reset/last_email/lock_prop middlewares), and the AnyCable pair for the
-     realtime specs. Each entry is skipped when something is already listening
-     (reuseExistingServer), so `overmind start -f Procfile.e2e` keeps working. */
-  webServer: [
-    {
-      command: 'vite build --mode test && vite preview --port 4173',
-      url: 'http://lvh.me:4173',
-      reuseExistingServer: !process.env.CI,
-    },
-    {
-      command:
-        'bash -c "source ~/.rvm/scripts/rvm && rvm 4.0.5@raccoonbets exec rails server -e cypress -b 127.0.0.1 -p 5000"',
-      cwd: '../Backend',
-      url: 'http://127.0.0.1:5000/up',
-      timeout: 120_000,
-      reuseExistingServer: !process.env.CI,
-    },
-    {
-      command:
-        'bash -c "source ~/.rvm/scripts/rvm && RAILS_ENV=cypress rvm 4.0.5@raccoonbets exec anycable"',
-      cwd: '../Backend',
-      port: 50051,
-      timeout: 120_000,
-      reuseExistingServer: !process.env.CI,
-    },
-    {
-      command:
-        'bash -c "source ~/.rvm/scripts/rvm && rvm 4.0.5@raccoonbets exec bin/anycable-go --port=8080"',
-      cwd: '../Backend',
-      url: 'http://127.0.0.1:8080/health',
-      timeout: 120_000,
-      reuseExistingServer: !process.env.CI,
-    },
-  ],
+  /* Only the SPA preview is booted here. The backend stack — Rails in the
+     `cypress` env (with the __cypress__ reset/last_email/lock_prop middlewares)
+     and the AnyCable pair for the realtime specs — is owned by
+     `overmind start -f Procfile.e2e`, which runs this suite once it is up.
+     reuseExistingServer means the preview Procfile.e2e starts is reused rather
+     than a second copy being launched. */
+  webServer: {
+    command: 'vite build --mode test && vite preview --port 4173',
+    url: 'http://lvh.me:4173',
+    reuseExistingServer: !process.env.CI,
+  },
 })
