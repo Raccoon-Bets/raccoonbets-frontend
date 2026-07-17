@@ -24,11 +24,11 @@ export default defineConfig({
      { name: 'webkit', use: { ...devices['Desktop Safari'] } }, */
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   /* Only the SPA preview is booted here. The backend stack — Rails in the
-     `cypress` env (with the __cypress__ reset/last_email/lock_prop middlewares)
-     and the AnyCable pair for the realtime specs — is owned by
-     `overmind start -f Procfile.e2e`, which runs this suite once it is up.
-     reuseExistingServer means the preview Procfile.e2e starts is reused rather
-     than a second copy being launched. */
+     `cypress` env (with the __cypress__ reset/last_email/lock_market
+     middlewares) and the anycable-go server for the realtime specs — is owned
+     by `overmind start -f Procfile.e2e`, which runs this suite once the
+     backend answers. reuseExistingServer keeps a preview left running by
+     `pnpm test:e2e:dev` from being duplicated. */
   webServer: {
     command: 'vite build --mode test && vite preview --port 4173',
     url: 'http://lvh.me:4173',

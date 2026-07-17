@@ -34,11 +34,20 @@ Local hosts use `lvh.me`, which resolves any subdomain to 127.0.0.1:
 
 Run unit tests with `pnpm test:unit` and the linters with `pnpm lint`.
 
-End-to-end tests run under Playwright with `pnpm test:e2e`. Playwright boots the
-whole stack itself — the SPA preview, Rails in the cypress environment, and
-AnyCable — so the back-end repository must be checked out as a sibling directory
-(`../Backend`). Use `overmind start -f Procfile.e2e` instead when you want the
-same stack running interactively (`pnpm test:e2e:dev`).
+End-to-end tests run under Playwright. Playwright boots only the SPA preview
+(port 4173); the back-end stack — Rails in the `cypress` environment and
+anycable-go — is owned by a `Procfile.e2e` in the parent directory, so the
+back-end repository must be checked out as a sibling (`../Backend`). Run the
+whole suite with `overmind start -f Procfile.e2e`:
+
+```procfile
+backend: cd Backend && PORT=5000 ANYCABLE_HTTP_RPC=true rvm 4.0.6@raccoonbets do rails server -e cypress -b 127.0.0.1
+ws: cd Backend && rvm 4.0.6@raccoonbets do bin/anycable-go --port=8080 --rpc_host=http://127.0.0.1:5000/_anycable
+e2e: cd Frontend && until curl -sfo /dev/null http://127.0.0.1:5000/up; do sleep 1; done && pnpm test:e2e
+```
+
+Use `pnpm test:e2e:dev` for the interactive UI runner against a stack started
+the same way.
 
 #### Deployment
 
