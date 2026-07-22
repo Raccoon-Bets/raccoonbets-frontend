@@ -1,3 +1,5 @@
+import '@/zodConfig'
+
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import * as Sentry from '@sentry/vue'

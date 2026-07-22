@@ -39,10 +39,8 @@ ARG VITE_TURNSTILE_SITE_KEY
 ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN \
     VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY
 
-# Build the application, generate the nginx config with CSP script hashes
-# from the built HTML, and remove development dependencies
+# Build the application and remove development dependencies
 RUN pnpm run build && \
-    node scripts/generate-nginx-conf.mjs && \
     pnpm prune --prod
 
 
@@ -64,7 +62,8 @@ COPY --from=exporter-download /tmp/nginx-prometheus-exporter /usr/local/bin/
 
 # Copy nginx configuration
 COPY .docker/nginx.conf /etc/nginx/nginx.conf
-COPY --from=build /app/.docker/default.conf.generated /etc/nginx/conf.d/default.conf
+COPY --from=build /app/.docker/default.conf /etc/nginx/conf.d/default.conf
+COPY .docker/origin-lock.conf.template /etc/nginx/conf.d/origin-lock.conf.template
 
 # Copy startup script
 COPY .docker/start.sh /start.sh
