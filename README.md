@@ -54,3 +54,9 @@ the same way.
 The app is deployed on Fly.io as `raccoonbets-frontend`, automatically after CI
 completes via the `deploy.yml` workflow. In production it sits behind the
 `raccoonbets-proxy` nginx app, which fronts the API at `api.raccoonbets.org`.
+
+The workflow builds the bundle on the runner, uploads its source maps to Sentry,
+strips them, and only then hands the build context to `flyctl`. The image copies
+that prebuilt `dist/` rather than producing its own, so a `docker build` run
+outside the workflow needs `pnpm run build` first — without a `dist/` directory
+it produces an image with no application in it.
