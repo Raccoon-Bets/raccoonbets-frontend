@@ -20,7 +20,8 @@
     "lint:oxlint": "oxlint -c oxlintrc.json src",
     "lint:knip": "knip",
     "lint": "run-s lint:eslint lint:stylelint lint:oxlint lint:knip",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@fontsource-variable/baloo-2": "^5.2.7",
