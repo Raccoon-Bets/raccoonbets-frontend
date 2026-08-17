@@ -7,7 +7,7 @@
   "ignoreDependencies": ["@testing-library/vue"],
   "ignoreExportsUsedInFile": true,
   "rules": {
-    "exports": "warn",
-    "unresolved": "warn"
+    "exports": "error",
+    "unresolved": "error"
   }
 }
