@@ -444,6 +444,12 @@ const en: LocaleMessage<VueMessageType> = {
     title: 'Page not found',
     body: 'The page you’re looking for doesn’t exist.',
     homeLink: 'Back to home',
+    market: {
+      question: 'Will this page be found?',
+      yes: 'Yes',
+      no: 'No',
+      resolved: 'Resolved: No',
+    },
   },
 }
 export default en
