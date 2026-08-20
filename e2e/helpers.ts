@@ -14,13 +14,22 @@ const API_HOST = 'http://127.0.0.1:5000'
 const TURNSTILE_SETTLE_MS = 500
 
 /**
+ * Total budget for landing a Turnstile-gated submit, shared across every re-click. Playwright's
+ * per-test timeout is 30s, so this leaves the surrounding steps room to fail on their own terms
+ * instead of being cut off part-way through a retry.
+ */
+const TURNSTILE_BUDGET_MS = 20_000
+
+/**
  * Clicks a Turnstile-gated submit once it has stayed continuously enabled for
  * {@link TURNSTILE_SETTLE_MS}. The widget re-issues its token shortly after first enabling the
  * button, and a click landing in that brief re-disabled window is silently swallowed by the
  * browser (disabled controls receive no mouse events).
  */
-export async function clickTurnstileSubmit(submit: Locator): Promise<void> {
-  const deadline = Date.now() + 15_000
+export async function clickTurnstileSubmit(
+  submit: Locator,
+  deadline: number = Date.now() + TURNSTILE_BUDGET_MS,
+): Promise<void> {
   let enabledSince: number | null = null
   while (enabledSince === null || Date.now() - enabledSince < TURNSTILE_SETTLE_MS) {
     if (Date.now() > deadline) throw new Error('Turnstile-gated submit never settled enabled')
@@ -32,24 +41,24 @@ export async function clickTurnstileSubmit(submit: Locator): Promise<void> {
 
 /**
  * Clicks a Turnstile-gated submit and waits for `confirmed` to acknowledge the result,
- * re-clicking in case a click was still swallowed by a token re-issue. The final attempt
- * propagates its own failure.
+ * re-clicking for as long as {@link TURNSTILE_BUDGET_MS} allows in case a click was swallowed by
+ * a token re-issue. The last attempt propagates its own failure.
  */
 export async function submitAndConfirm(
   submit: Locator,
   confirmed: () => Promise<void>,
 ): Promise<void> {
-  for (let attempt = 1; attempt < 3; attempt++) {
-    await clickTurnstileSubmit(submit)
+  const deadline = Date.now() + TURNSTILE_BUDGET_MS
+  let lastError: unknown
+  do {
+    await clickTurnstileSubmit(submit, deadline)
     try {
-      await confirmed()
-      return
-    } catch {
-      // The click may still have been swallowed; settle and try again.
+      return await confirmed()
+    } catch (error) {
+      lastError = error
     }
-  }
-  await clickTurnstileSubmit(submit)
-  await confirmed()
+  } while (Date.now() < deadline)
+  throw lastError
 }
 
 /** Logs in on the group subdomain and waits for the feed to load. */
