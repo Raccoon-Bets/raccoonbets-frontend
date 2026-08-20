@@ -24,8 +24,9 @@ test.describe('Flow A: signup → create group → subdomain SSO', () => {
     await signUpPage.fillName('Rocket Raccoon')
     await signUpPage.fillEmail(EMAIL)
     await signUpPage.fillPassword(PASSWORD)
-    await signUpPage.submit()
-    await expect(page.getByTestId('signup-success')).toBeVisible()
+    await signUpPage.submit(async () => {
+      await expect(page.getByTestId('signup-success')).toBeVisible({ timeout: 5000 })
+    })
 
     // ── Verify the account via the emailed link ─────────────────────────
     const email = await fetchLastEmail()
@@ -38,10 +39,10 @@ test.describe('Flow A: signup → create group → subdomain SSO', () => {
 
     // ── Log in (the verify view auto-redirects to login shortly) ────────
     await logInPage.visit()
-    await logInPage.logIn(EMAIL, PASSWORD)
-
     // Login on the apex routes to the groups list; the fresh user has none.
-    await expect(page.getByTestId('groups-empty')).toBeVisible()
+    await logInPage.logIn(EMAIL, PASSWORD, async () => {
+      await expect(page.getByTestId('groups-empty')).toBeVisible({ timeout: 5000 })
+    })
 
     // ── Create a group ──────────────────────────────────────────────────
     await page.getByTestId('groups-new-link').click()

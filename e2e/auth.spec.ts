@@ -28,9 +28,10 @@ test.describe('Auth: login, logout, and password reset', () => {
     resetDatabase: _reset,
   }) => {
     await logInPage.visit()
-    await logInPage.logIn(ADMIN.email, 'definitely-not-it')
+    await logInPage.logIn(ADMIN.email, 'definitely-not-it', async () => {
+      await expect(page.getByTestId('login-error')).toBeVisible({ timeout: 5000 })
+    })
 
-    await expect(page.getByTestId('login-error')).toBeVisible()
     await expect(page).toHaveURL(/\/login$/)
   })
 
@@ -59,8 +60,9 @@ test.describe('Auth: login, logout, and password reset', () => {
 
     // ── The old password no longer works… ────────────────────────────────
     await logInPage.visit()
-    await logInPage.logIn(ADMIN.email, PASSWORD)
-    await expect(page.getByTestId('login-error')).toBeVisible()
+    await logInPage.logIn(ADMIN.email, PASSWORD, async () => {
+      await expect(page.getByTestId('login-error')).toBeVisible({ timeout: 5000 })
+    })
 
     // ── …and the new one does ────────────────────────────────────────────
     await logInOnApex(page, ADMIN.email, NEW_PASSWORD)
