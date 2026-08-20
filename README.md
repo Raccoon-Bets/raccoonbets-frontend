@@ -41,8 +41,8 @@ back-end repository must be checked out as a sibling (`../Backend`). Run the
 whole suite with `overmind start -f Procfile.e2e`:
 
 ```procfile
-backend: cd Backend && PORT=5000 ANYCABLE_HTTP_RPC=true rvm 4.0.6@raccoonbets do rails server -e cypress -b 127.0.0.1
-ws: cd Backend && rvm 4.0.6@raccoonbets do bin/anycable-go --port=8080 --rpc_host=http://127.0.0.1:5000/_anycable
+backend: cd Backend && PORT=5000 ANYCABLE_HTTP_RPC=true rvm 4.0.7@raccoonbets do rails server -e cypress -b 127.0.0.1
+ws: cd Backend && rvm 4.0.7@raccoonbets do bin/anycable-go --port=8080 --rpc_host=http://127.0.0.1:5000/_anycable
 e2e: cd Frontend && until curl -sfo /dev/null http://127.0.0.1:5000/up; do sleep 1; done && pnpm test:e2e
 ```
 

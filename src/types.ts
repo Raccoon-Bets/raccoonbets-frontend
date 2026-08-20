@@ -2,11 +2,7 @@ import type { SupportedLocale } from '@/i18n/locales'
 
 /** The notifiable event keys, matching the backend. */
 export type NotificationEvent =
-  | 'market_resolved'
-  | 'market_created'
-  | 'settlement'
-  | 'market_closing_soon'
-  | 'market_commented'
+  'market_resolved' | 'market_created' | 'settlement' | 'market_closing_soon' | 'market_commented'
 
 /** A per-event pair of channel toggles. */
 export interface ChannelToggles {

@@ -2,13 +2,7 @@ import { ref, watch, type Ref } from 'vue'
 
 /** The live availability of a candidate group subdomain. */
 export type SubdomainAvailability =
-  | 'idle'
-  | 'invalid'
-  | 'reserved'
-  | 'checking'
-  | 'available'
-  | 'taken'
-  | 'error'
+  'idle' | 'invalid' | 'reserved' | 'checking' | 'available' | 'taken' | 'error'
 
 // DNS-label format; mirrors the backend's Group::SUBDOMAIN_FORMAT.
 const SUBDOMAIN_FORMAT = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/
