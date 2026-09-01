@@ -15,6 +15,12 @@ export interface Config {
    */
   apexDomain: string
 
+  /**
+   * PrimeUI Community License key. PrimeVue verifies it offline; without one it warns on the
+   * console and pins an "Invalid PrimeUI License" banner to the page.
+   */
+  primeUILicense: string
+
   /** Cloudflare Turnstile site key used on auth forms. */
   TURNSTILE_SITE_KEY: string
 }

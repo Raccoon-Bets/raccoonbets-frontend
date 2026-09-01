@@ -43,6 +43,7 @@ jobs:
         env:
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           VITE_SENTRY_RELEASE: ${{ github.sha }}
+          VITE_PRIMEUI_LICENSE: ${{ secrets.PRIMEUI_LICENSE }}
           VITE_TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
       # Sourcemaps must reach Sentry BEFORE they are deleted. Do not reorder.
       - name: Create Sentry release

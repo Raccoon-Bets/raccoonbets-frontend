@@ -5,6 +5,7 @@ const config: Config = {
   APIURL: import.meta.env.VITE_API_URL || '',
   actionCableURL: import.meta.env.VITE_ACTION_CABLE_URL || '',
   apexDomain: import.meta.env.VITE_APEX_DOMAIN || 'lvh.me',
+  primeUILicense: import.meta.env.VITE_PRIMEUI_LICENSE || '',
   TURNSTILE_SITE_KEY: import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
 }
 
