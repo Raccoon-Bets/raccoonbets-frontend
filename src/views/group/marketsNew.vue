@@ -8,6 +8,7 @@ import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
+import TimesIcon from '@primevue/icons/times'
 import config from '@/config'
 import FieldErrors from '@/components/fieldErrors.vue'
 import FormField from '@/components/formField.vue'
@@ -193,10 +194,13 @@ const URL = config.APIURL + groupPath('/markets')
                   type="button"
                   severity="danger"
                   outlined
-                  icon="pi pi-times"
                   :aria-label="t('marketsNew.removeOutcome', { number: index + 1 })"
                   @click="removeOutcome(index)"
-                />
+                >
+                  <template #icon="{ class: iconClass }">
+                    <TimesIcon :class="iconClass" />
+                  </template>
+                </Button>
               </div>
             </div>
             <Button

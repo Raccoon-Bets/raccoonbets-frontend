@@ -180,6 +180,9 @@ importers:
       '@primeuix/themes':
         specifier: ^3.0.0
         version: 3.0.0
+      '@primevue/icons':
+        specifier: ^5.0.1
+        version: 5.0.1(vue@3.5.42(typescript@6.0.3))
       '@rails/actioncable':
         specifier: ^8.1.301
         version: 8.1.301
@@ -195,9 +198,6 @@ importers:
       pinia:
         specifier: ^4.0.3
         version: 4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.42(typescript@6.0.3))
-      primeicons:
-        specifier: ^8.0.0
-        version: 8.0.1
       primevue:
         specifier: ^5.0.1
         version: 5.0.1(vue@3.5.42(typescript@6.0.3))
@@ -3636,9 +3636,6 @@ packages:
   pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
-
-  primeicons@8.0.1:
-    resolution: {integrity: sha512-5O1zIpEKUk0pKfEQSdNVJRxPivo0271zAe7vnZGl+fughxixv4PnVou2J6pPy2wy83nrDn58BqeBwWnpCZmjkw==}
 
   primevue@5.0.1:
     resolution: {integrity: sha512-nnQmoerXzrDDIeVXw8Ve1JnIaDPapwN51tOf5s4saih69ocZNVs2U1nXmEdc0ajJwpTzh/Wr3lLbub5cyItQ2Q==}
@@ -7788,8 +7785,6 @@ snapshots:
       ansi-regex: 5.0.1
       ansi-styles: 5.2.0
       react-is: 17.0.2
-
-  primeicons@8.0.1: {}
 
   primevue@5.0.1(vue@3.5.42(typescript@6.0.3)):
     dependencies:

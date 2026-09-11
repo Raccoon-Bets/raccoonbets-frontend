@@ -55,6 +55,17 @@ export default function useChannel<T>(options: {
     subscription = null
   }
 
+  // The Action Cable client is downloaded on demand, so ask the store for a consumer as soon
+  // as this scope is ready to subscribe.
+  watch(
+    [() => authStore.actionCableURL, options.params],
+    ([, params]) => {
+      if (params === null) return
+      authStore.connectActionCable().catch(notifySentry)
+    },
+    { immediate: true },
+  )
+
   watch(
     [() => authStore.actionCableConsumer, options.params],
     ([consumer, params]) => {

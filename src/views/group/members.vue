@@ -6,6 +6,7 @@ import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Message from 'primevue/message'
 import Select from 'primevue/select'
+import TrashIcon from '@primevue/icons/trash'
 import config from '@/config'
 import FieldErrors from '@/components/fieldErrors.vue'
 import FormField from '@/components/formField.vue'
@@ -173,11 +174,14 @@ const inviteURL = config.APIURL + groupPath('/invitations')
                   size="small"
                   severity="danger"
                   variant="text"
-                  icon="pi pi-trash"
                   :aria-label="t('members.remove')"
                   :data-testid="`member-${data.id}-remove`"
                   @click="removeMember(data)"
-                />
+                >
+                  <template #icon="{ class: iconClass }">
+                    <TrashIcon :class="iconClass" />
+                  </template>
+                </Button>
               </div>
             </template>
           </Column>

@@ -1,7 +1,7 @@
+import { markRaw } from 'vue'
 import { defineStore } from 'pinia'
 import { z } from 'zod'
 import { Err, Ok, type Result } from 'ts-results'
-import { Consumer, createConsumer } from '@rails/actioncable'
 import type { APIResponse, AuthState, Errors } from '@/stores/types'
 import config from '@/config'
 import { userFromJSON, type SessionJSONUp, type UserJSONDown } from '@/stores/coding'
@@ -26,6 +26,7 @@ const initialState: AuthState = {
   JWT: null,
   refreshToken: null,
   loggingIn: false,
+  actionCableConsumer: null,
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -67,11 +68,11 @@ export const useAuthStore = defineStore('auth', {
       return payload.e
     },
 
-    actionCableConsumer(state): Consumer | null {
+    /** The authenticated realtime endpoint for this session, or `null` when logged out. */
+    actionCableURL(state): string | null {
       if (state.JWT === null) return null
       const queryString = new URLSearchParams({ jwt: state.JWT })
-      const URL = `${config.actionCableURL}?${queryString.toString()}`
-      return createConsumer(URL)
+      return `${config.actionCableURL}?${queryString.toString()}`
     },
 
     authHeader: (state) => (state.JWT ? `Bearer ${state.JWT}` : null),
@@ -79,7 +80,37 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     reset() {
+      this.disconnectActionCable()
       this.$patch(initialState)
+    },
+
+    /**
+     * Points {@link actionCableConsumer} at the realtime endpoint for the current session,
+     * replacing a consumer minted for a token that has since turned over.
+     *
+     * The Action Cable client is imported on demand, so visitors who never subscribe to a
+     * channel — the marketing, login and signup pages — never download a websocket client.
+     */
+    async connectActionCable(): Promise<void> {
+      const { actionCableURL } = this
+      if (actionCableURL === null) {
+        this.disconnectActionCable()
+        return
+      }
+      if (this.actionCableConsumer?.url === actionCableURL) return
+
+      const { createConsumer } = await import('@rails/actioncable')
+      // The session can turn over while the client downloads; a later call wins.
+      if (this.actionCableURL !== actionCableURL) return
+
+      this.disconnectActionCable()
+      this.actionCableConsumer = markRaw(createConsumer(actionCableURL))
+    },
+
+    /** Closes the realtime connection, if one is open. */
+    disconnectActionCable(): void {
+      this.actionCableConsumer?.disconnect()
+      this.actionCableConsumer = null
     },
 
     /** Hydrates the session from the shared-domain token cookies. */

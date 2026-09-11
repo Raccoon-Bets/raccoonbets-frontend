@@ -1,3 +1,4 @@
+import type { Consumer } from '@rails/actioncable'
 import type { Result } from 'ts-results'
 import type {
   Balance,
@@ -113,6 +114,8 @@ export interface AuthState {
   JWT: string | null
   refreshToken: string | null
   loggingIn: boolean
+  /** The Action Cable consumer for the current session, once one is connected. */
+  actionCableConsumer: Consumer | null
 }
 
 export interface APISuccess<T> {

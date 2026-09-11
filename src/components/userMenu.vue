@@ -57,13 +57,30 @@ const items = computed(() => [
       severity="secondary"
       variant="text"
       size="small"
-      icon="pi pi-user"
       :label="authStore.currentEmail ?? undefined"
       data-testid="current-user-email"
       aria-haspopup="true"
       aria-controls="user-menu-items"
       @click="menu?.toggle($event)"
-    />
+    >
+      <template #icon="{ class: iconClass }">
+        <svg
+          :class="iconClass"
+          width="14"
+          height="14"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+          <path d="M3 16.5c0-3.31 3-4 7-4s7 .69 7 4" />
+        </svg>
+      </template>
+    </Button>
     <Menu id="user-menu-items" ref="menu" :model="items" popup>
       <template #item="{ item, props }">
         <a v-bind="props.action" :href="item.url" :data-testid="item.testid">{{ item.label }}</a>

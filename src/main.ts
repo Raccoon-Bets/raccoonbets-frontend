@@ -14,7 +14,6 @@ import { recoverFromPreloadErrors } from '@/utils/preloadRecovery'
 
 import '@fontsource-variable/baloo-2'
 import '@fontsource-variable/nunito'
-import 'primeicons/primeicons.css'
 import './styles/_tokens.scss'
 import './styles/base.scss'
 

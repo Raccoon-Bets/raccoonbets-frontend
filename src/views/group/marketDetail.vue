@@ -7,6 +7,8 @@ import Button from 'primevue/button'
 import DatePicker from 'primevue/datepicker'
 import Message from 'primevue/message'
 import Textarea from 'primevue/textarea'
+import PencilIcon from '@primevue/icons/pencil'
+import TrashIcon from '@primevue/icons/trash'
 import config from '@/config'
 import FieldErrors from '@/components/fieldErrors.vue'
 import FormField from '@/components/formField.vue'
@@ -526,23 +528,29 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
               type="button"
               severity="secondary"
               size="small"
-              icon="pi pi-pencil"
               :aria-label="t('marketDetail.editLink')"
               data-testid="market-edit-toggle"
               @click="startEditing"
-            />
+            >
+              <template #icon="{ class: iconClass }">
+                <PencilIcon :class="iconClass" />
+              </template>
+            </Button>
             <Button
               v-if="canDelete && !editing"
               type="button"
               severity="danger"
               outlined
               size="small"
-              icon="pi pi-trash"
               :aria-label="t('marketDetail.deleteLink')"
               :disabled="isDeleting"
               data-testid="market-delete"
               @click="deleteMarket"
-            />
+            >
+              <template #icon="{ class: iconClass }">
+                <TrashIcon :class="iconClass" />
+              </template>
+            </Button>
           </div>
         </sticker-card>
 
@@ -724,12 +732,15 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
                 size="small"
                 severity="danger"
                 outlined
-                icon="pi pi-trash"
                 :aria-label="t('marketDetail.cancelPositionLabel', { name: position.member.name })"
                 :disabled="isCancellingPosition"
                 :data-testid="`position-${position.id}-admin-cancel`"
                 @click="cancelMemberPosition(position)"
-              />
+              >
+                <template #icon="{ class: iconClass }">
+                  <TrashIcon :class="iconClass" />
+                </template>
+              </Button>
             </li>
           </ul>
         </sticker-card>
@@ -764,14 +775,17 @@ const commentsURL = config.APIURL + groupPath(`/markets/${String(marketId.value)
                   size="small"
                   severity="danger"
                   outlined
-                  icon="pi pi-trash"
                   :aria-label="
                     t('marketDetail.comments.deleteLabel', { author: comment.author.name })
                   "
                   :disabled="isDeletingComment"
                   :data-testid="`comment-${comment.id}-delete`"
                   @click="removeComment(comment)"
-                />
+                >
+                  <template #icon="{ class: iconClass }">
+                    <TrashIcon :class="iconClass" />
+                  </template>
+                </Button>
               </div>
               <p class="body">{{ comment.body }}</p>
             </li>
