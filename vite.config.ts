@@ -67,10 +67,11 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     // vue-i18n's own bundle-size flags, which only take effect when substituted at build
-    // time. i18n is installed with `legacy: false`, so the Options API bridge and its global
-    // component/directive registration are dead code. The message compiler stays: the
-    // catalogs in src/i18n are plain interpolated strings compiled by the JIT compiler at
-    // runtime, not build-time-precompiled ASTs, so dropping it would break every translation.
+    // time. i18n is installed with `legacy: false`, so the Options API bridge is dead code,
+    // and the built-in components the full install registers globally are imported by name
+    // where a view renders one. The message compiler stays: the catalogs in src/i18n are plain
+    // interpolated strings compiled by the JIT compiler at runtime, not build-time-precompiled
+    // ASTs, so dropping it would break every translation.
     define: {
       __VUE_I18N_FULL_INSTALL__: false,
       __VUE_I18N_LEGACY_API__: false,

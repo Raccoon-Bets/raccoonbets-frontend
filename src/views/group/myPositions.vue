@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { I18nT, useI18n } from 'vue-i18n'
 import Message from 'primevue/message'
 import Tag from 'primevue/tag'
 import GroupShell from '@/components/group/groupShell.vue'
@@ -69,13 +69,13 @@ function amountLine(market: Market): string {
       <p v-if="marketsStore.marketsLoading">{{ t('messages.loading') }}</p>
 
       <sticker-card v-if="myBalance !== null" class="detail-section">
-        <i18n-t keypath="myPositions.balance" tag="p" class="balance" data-testid="my-balance">
+        <I18nT keypath="myPositions.balance" tag="p" class="balance" data-testid="my-balance">
           <template #amount>
             <sticker-badge :tilt="0" :tone="myBalance.balanceCents >= 0 ? 'positive' : 'negative'">
               {{ format(myBalance.balanceCents, groupStore.group?.currency ?? 'USD') }}
             </sticker-badge>
           </template>
-        </i18n-t>
+        </I18nT>
       </sticker-card>
 
       <template v-if="marketsStore.markets !== null">
