@@ -5,6 +5,20 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
 
+/**
+ * Stable third-party code, grouped into chunks named after what they actually hold.
+ *
+ * Left to its own heuristics the bundler interleaves these libraries with application code,
+ * so an app-only deploy rehashes them and busts the year-long `immutable` cache for bytes
+ * that did not change. PrimeVue's components are deliberately absent: they are imported one
+ * component at a time and belong in the lazy route chunks that use them.
+ */
+const vendorChunks = [
+  { name: 'vendor-vue', test: /node_modules\/(?:vue|vue-router|pinia|@vue\/[^/]+)\//u },
+  { name: 'vendor-i18n', test: /node_modules\/(?:vue-i18n|@intlify\/[^/]+)\//u },
+  { name: 'vendor-primevue', test: /node_modules\/@primevue\/core\//u },
+]
+
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd())
@@ -66,6 +80,9 @@ export default defineConfig(({ command, mode }) => {
     },
     build: {
       sourcemap: 'hidden',
+      rollupOptions: {
+        output: { codeSplitting: { groups: vendorChunks } },
+      },
     },
   }
 })
