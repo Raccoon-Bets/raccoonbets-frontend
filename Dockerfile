@@ -1,10 +1,10 @@
 # syntax = docker/dockerfile:1
 
 # Download nginx-prometheus-exporter
-FROM alpine:3.23 AS exporter-download
+FROM alpine:3.24 AS exporter-download
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
-ARG EXPORTER_VERSION=1.5.1
+ARG EXPORTER_VERSION=1.5.3
 RUN wget -qO- https://github.com/nginxinc/nginx-prometheus-exporter/releases/download/v${EXPORTER_VERSION}/nginx-prometheus-exporter_${EXPORTER_VERSION}_linux_amd64.tar.gz \
     | tar xzf - -C /tmp \
     && chmod +x /tmp/nginx-prometheus-exporter
