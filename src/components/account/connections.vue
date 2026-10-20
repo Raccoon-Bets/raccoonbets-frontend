@@ -84,7 +84,12 @@ function describe(connection: McpConnection): string {
 
     <template v-if="listing">
       <template v-if="listing.enabled">
-        <p>{{ t('account.connections.setup') }}</p>
+        <p>
+          {{ t('account.connections.setup') }}
+          <router-link :to="{ name: 'assistants' }">
+            {{ t('account.connections.instructions') }}
+          </router-link>
+        </p>
         <div class="server-url">
           <InputText
             :model-value="listing.serverURL"

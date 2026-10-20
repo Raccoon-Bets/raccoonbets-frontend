@@ -37,6 +37,62 @@ const en: LocaleMessage<VueMessageType> = {
     groupsLink: 'Your groups',
     accountLink: 'Your account',
   },
+  assistants: {
+    banner: {
+      badge: 'New',
+      message: 'Bet from Claude, ChatGPT, or Codex.',
+      action: 'Set it up',
+    },
+    title: 'Use Raccoon Bets from an AI assistant',
+    intro:
+      'Connect an assistant to the groups you choose, then ask it what’s open, how the pools look, or who owes whom. If you allow it, it can also create markets, take positions, comment, and record settlements for you.',
+    serverURL: 'Raccoon Bets server URL',
+    copy: 'Copy',
+    copied: 'Copied',
+    copyError: 'Couldn’t copy. Select the text and copy it instead.',
+    copyCommand: 'Copy command',
+    copiedCommand: 'Copied command',
+    claude: {
+      title: 'Claude',
+      kind: 'Web, desktop, and mobile apps',
+      step1:
+        'In Claude, open [Customize] → [Connectors], then choose [Add] → [Add custom connector].',
+      step2:
+        'Enter `Raccoon Bets` as the name, paste the server URL, and choose [Continue]. Keep the detected [Sign in now] and [Register automatically] settings, and choose [Add].',
+      step3:
+        'Choose [Connect], log in to Raccoon Bets, pick the groups to share, and choose [Connect].',
+    },
+    chatgpt: {
+      title: 'ChatGPT',
+      kind: 'Web and desktop apps',
+      step1:
+        'In ChatGPT, open [Customize] → [Plugins], then choose [Add] → [Add custom MCP server].',
+      step2:
+        'Enter `Raccoon Bets` as the name, paste the server URL, and keep [OAuth]. Check [I understand and want to continue], then choose [Create as a plugin].',
+      step3:
+        'Choose [Connect Raccoon Bets], log in to Raccoon Bets, pick the groups to share, and choose [Connect].',
+    },
+    claudeCode: {
+      title: 'Claude Code',
+      kind: 'Terminal',
+      step1: 'Add Raccoon Bets from your terminal:',
+      step2: 'In Claude Code, type `/mcp`, select [raccoon-bets], and choose [Authenticate].',
+      step3:
+        'In the browser window that opens, log in, pick the groups to share, and choose [Connect].',
+    },
+    codex: {
+      title: 'Codex',
+      kind: 'Terminal',
+      step1: 'Add Raccoon Bets from your terminal:',
+      step2: 'Log in. Codex opens Raccoon Bets in your browser:',
+      step3: 'Log in, pick the groups to share, and choose [Connect].',
+    },
+    revoke:
+      'To disconnect an assistant, open [Your account] → [Connected apps] and choose [Revoke access].',
+    privacy:
+      'Connected assistants can see the markets, positions, comments, member names, balances, and settlements in the groups you share. Only connect assistants you trust. Custom connections may depend on your assistant plan or workspace settings.',
+    home: 'Back to Raccoon Bets',
+  },
   auth: {
     logIn: {
       title: 'Log in',
@@ -176,6 +232,7 @@ const en: LocaleMessage<VueMessageType> = {
       title: 'Connected apps',
       setup:
         'To connect ChatGPT, Claude, or another assistant, add a connector with this server URL. Your assistant then sends you here to choose what it can access.',
+      instructions: 'See setup steps for each assistant.',
       serverURL: 'Server URL',
       copy: 'Copy',
       copied: 'Server URL copied.',

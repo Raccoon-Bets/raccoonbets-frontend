@@ -64,6 +64,11 @@ const apexRoutes: RouteRecordRaw[] = [
   },
   ...sharedAuthRoutes,
   {
+    path: '/assistants',
+    name: 'assistants',
+    component: () => import('@/views/apex/assistants.vue'),
+  },
+  {
     path: '/account',
     name: 'account',
     component: () => import('@/views/account.vue'),

@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Message from 'primevue/message'
 import requireAuth from '@/composables/requireAuth'
+import AssistantBanner from '@/components/assistants/assistantBanner.vue'
 import StickerButton from '@/components/sticker/stickerButton.vue'
 import StickerCard from '@/components/sticker/stickerCard.vue'
 import UserMenu from '@/components/userMenu.vue'
@@ -21,6 +22,7 @@ onMounted(async () => {
 <template>
   <main id="main-content" class="auth-view">
     <user-menu />
+    <assistant-banner />
     <h1>{{ t('groups.title') }}</h1>
 
     <p v-if="groupsStore.myGroupsLoading">{{ t('messages.loading') }}</p>

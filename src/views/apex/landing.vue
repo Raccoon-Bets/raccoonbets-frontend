@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import AssistantBanner from '@/components/assistants/assistantBanner.vue'
 import RaccoonMascot from '@/components/mascot/raccoonMascot.vue'
 import StickerButton from '@/components/sticker/stickerButton.vue'
 import UserMenu from '@/components/userMenu.vue'
@@ -12,6 +13,7 @@ const authStore = useAuthStore()
 <template>
   <main id="main-content" class="auth-view landing">
     <user-menu />
+    <assistant-banner v-if="authStore.loggedIn" />
     <div class="hero">
       <raccoon-mascot pose="coin" :size="140" />
       <h1>{{ t('landing.title') }}</h1>
