@@ -5,6 +5,11 @@ import { isApex } from '@/config/tenant'
 // so logging in works the same wherever the visitor lands.
 const sharedAuthRoutes: RouteRecordRaw[] = [
   {
+    path: '/oauth/consent/:requestId',
+    name: 'mcpConsent',
+    component: () => import('@/views/auth/mcpConsent.vue'),
+  },
+  {
     path: '/login',
     name: 'logIn',
     component: () => import('@/views/auth/logIn.vue'),

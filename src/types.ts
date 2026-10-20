@@ -390,3 +390,59 @@ export interface User {
   /** When the user permanently dismissed the push priming banner; null if not. */
   pushPromptDismissedAt: string | null
 }
+
+/** A group an assistant connection can be scoped to. */
+export interface McpGroup {
+  id: number
+  name: string
+}
+
+/** A pending request from an assistant to connect to the signed-in member's account. */
+export interface McpConsent {
+  /** The name the assistant registered for itself; unverified. */
+  clientName: string
+
+  /** The host the authorization is sent to: the only server-checked identity of the assistant. */
+  redirectHost: string
+
+  /** Whether the assistant asked to act on the member's behalf in addition to reading. */
+  writeRequested: boolean
+
+  /** How many days the connection lasts once approved. */
+  lifetimeDays: number
+
+  /** The member's groups that can be shared with the assistant. */
+  groups: McpGroup[]
+
+  /** The signed-in account that would grant access. */
+  account: { name: string; email: string }
+}
+
+/** An assistant currently connected to the member's account. */
+export interface McpConnection {
+  id: number
+
+  /** The name the assistant registered for itself. */
+  clientName: string
+
+  /** Whether the assistant may act on the member's behalf, not only read. */
+  canAct: boolean
+
+  /** The groups the assistant can see. */
+  groups: McpGroup[]
+
+  /** When the connection's access lapses. */
+  expiresAt: Date
+}
+
+/** The member's assistant connections and how to add one. */
+export interface McpConnections {
+  /** Whether new assistant connections are accepted. */
+  enabled: boolean
+
+  /** The MCP server URL to give an assistant. */
+  serverURL: string
+
+  /** Usable connections: not revoked, not expired, and with access issued. */
+  connections: McpConnection[]
+}

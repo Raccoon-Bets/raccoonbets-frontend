@@ -175,6 +175,14 @@ export async function request({
   return NEVER_SETTLES
 }
 
+// An error response without a recognizable body (an empty 404, a proxy's HTML
+// page) parses as empty, so callers fall back to its status.
+async function parseErrorBody(response: Response): Promise<z.infer<typeof apiErrorBodySchema>> {
+  const body: unknown = await response.json().catch(() => ({}))
+  const parsed = apiErrorBodySchema.safeParse(body)
+  return parsed.success ? parsed.data : {}
+}
+
 export async function requestJSON<T>(args: RequestArgs): Promise<APIResponse<T>> {
   const response = await request(args)
   if (response.ok) {
@@ -183,7 +191,7 @@ export async function requestJSON<T>(args: RequestArgs): Promise<APIResponse<T>>
       body: response.status === 204 ? undefined : ((await response.json()) as T),
     })
   }
-  const parsed = apiErrorBodySchema.parse(await response.json())
+  const parsed = await parseErrorBody(response)
   // Normalize Rodauth's ["field", "message"] tuple into { field: ["message"] }.
   const errors =
     parsed.errors ??

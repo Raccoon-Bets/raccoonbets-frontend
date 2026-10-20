@@ -1,5 +1,7 @@
+import { createHash, randomBytes } from 'node:crypto'
 import type { Locator, Page } from '@playwright/test'
-import { expect, extractEmailPath, fetchLastEmail } from './fixtures'
+import { z } from 'zod'
+import { API_HOST, expect, extractEmailPath, fetchLastEmail } from './fixtures'
 
 // The seeded group and users from the backend's Cypress::Reset middleware.
 export const APEX_URL = 'http://lvh.me:4173'
@@ -7,8 +9,7 @@ export const GROUP_URL = 'http://cypress-den.lvh.me:4173'
 export const ADMIN = { email: 'cypress@example.com', name: 'Cypress User' }
 export const MEMBER = { email: 'cypress2@example.com', name: 'Cypress Friend' }
 export const PASSWORD = 'supersecret'
-
-const API_HOST = 'http://127.0.0.1:5000'
+export const GROUP = { name: 'Cypress Den', slug: 'cypress-den' }
 
 /** How long a Turnstile-gated submit must stay enabled before a click is trusted. */
 const TURNSTILE_SETTLE_MS = 500
@@ -288,4 +289,91 @@ export async function runTradingRound(page: Page, title: string): Promise<number
   await logInToGroup(page, ADMIN.email)
   await resolveMarket(page, marketId, 'YES')
   return marketId
+}
+
+/** Where the stand-in assistant receives its OAuth authorization response. */
+export const ASSISTANT_CALLBACK = 'https://assistant.example/callback'
+
+function mcpResource(): string {
+  return `${API_HOST}/mcp`
+}
+
+/** An assistant's OAuth client and PKCE verifier, plus the consent page it sends the member to. */
+export interface AssistantConnection {
+  clientID: string
+  verifier: string
+  consentURL: string
+}
+
+/**
+ * Registers a stand-in assistant as a public OAuth client named `name` and starts an
+ * authorization asking for read and write access, as ChatGPT or Claude would.
+ */
+export async function startAssistantConnection(name: string): Promise<AssistantConnection> {
+  const registration = await fetch(`${API_HOST}/oauth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_name: name,
+      redirect_uris: [ASSISTANT_CALLBACK],
+      token_endpoint_auth_method: 'none',
+    }),
+  })
+  const { client_id: clientID } = z
+    .object({ client_id: z.string() })
+    .parse(await registration.json())
+  const verifier = randomBytes(48).toString('base64url')
+  const query = new URLSearchParams({
+    client_id: clientID,
+    redirect_uri: ASSISTANT_CALLBACK,
+    resource: mcpResource(),
+    response_type: 'code',
+    scope: 'mcp:read mcp:write',
+    state: 'browser-state',
+    code_challenge_method: 'S256',
+    code_challenge: createHash('sha256').update(verifier).digest('base64url'),
+  })
+  const response = await fetch(`${API_HOST}/oauth/authorize?${query.toString()}`, {
+    redirect: 'manual',
+  })
+  const consentURL = response.headers.get('location')
+  if (!consentURL) throw new Error(`Authorization failed: ${await response.text()}`)
+  return { clientID, verifier, consentURL }
+}
+
+/** Exchanges the authorization code the consent page sent the assistant for an access token. */
+export async function exchangeAssistantCode(
+  { clientID, verifier }: AssistantConnection,
+  code: string,
+): Promise<string> {
+  const response = await fetch(`${API_HOST}/oauth/token`, {
+    method: 'POST',
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: clientID,
+      code,
+      code_verifier: verifier,
+      redirect_uri: ASSISTANT_CALLBACK,
+      resource: mcpResource(),
+    }),
+  })
+  return z.object({ access_token: z.string() }).parse(await response.json()).access_token
+}
+
+/** Calls an MCP tool with no arguments as the assistant holding `token`. */
+export async function callAssistantTool(token: string, tool: string): Promise<Response> {
+  return fetch(mcpResource(), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json, text/event-stream',
+    },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'tools/call',
+      params: { name: tool, arguments: {} },
+    }),
+  })
 }

@@ -139,20 +139,3 @@ const URL = config.APIURL + groupPath('')
     </group-shell>
   </main>
 </template>
-
-<style scoped lang="scss">
-// Group related fields under a labelled legend; the larger bottom margin sets
-// the groups apart while the fields inside keep their own spacing.
-.field-group {
-  padding: 0;
-  margin: 0 0 var(--spacing-lg);
-  border: none;
-
-  legend {
-    padding: 0;
-    margin-bottom: var(--spacing-sm);
-    font-family: var(--rb-font-display);
-    font-weight: 700;
-  }
-}
-</style>

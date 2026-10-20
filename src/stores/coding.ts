@@ -7,6 +7,8 @@ import type {
   InvitationPreview,
   Market,
   MarketDetail,
+  McpConnections,
+  McpConsent,
   Member,
   NotificationPreferences,
   Passkey,
@@ -625,4 +627,80 @@ export interface ForgotPasswordJSONUp {
 /** Payload sent to the `verifyAccount` action. */
 export interface VerifyAccountJSONUp {
   key: string
+}
+
+const mcpGroupSchema = z.object({ id: z.number(), name: z.string() })
+
+const mcpConsentSchema = z.object({
+  client_name: z.string(),
+  redirect_uri: z.url(),
+  write_requested: z.boolean(),
+  lifetime_days: z.number(),
+  groups: z.array(mcpGroupSchema),
+  account: z.object({ name: z.string(), email: z.string() }),
+})
+
+/**
+ * Converts a received assistant consent request to an {@link McpConsent}.
+ *
+ * @param data The JSON data received.
+ * @returns The McpConsent object.
+ */
+export function mcpConsentFromJSON(data: unknown): McpConsent {
+  const JSON = mcpConsentSchema.parse(data)
+  return {
+    clientName: JSON.client_name,
+    redirectHost: new URL(JSON.redirect_uri).host,
+    writeRequested: JSON.write_requested,
+    lifetimeDays: JSON.lifetime_days,
+    groups: JSON.groups,
+    account: JSON.account,
+  }
+}
+
+const mcpConnectionSchema = z.object({
+  id: z.number(),
+  client_name: z.string(),
+  scopes: z.array(z.string()),
+  groups: z.array(mcpGroupSchema),
+  expires_at: z.string(),
+})
+
+const mcpConnectionsSchema = z.object({
+  enabled: z.boolean(),
+  server_url: z.url(),
+  connections: z.array(mcpConnectionSchema),
+})
+
+/**
+ * Converts the received assistant connections listing.
+ *
+ * @param data The JSON data received.
+ * @returns The connections and server details.
+ */
+export function mcpConnectionsFromJSON(data: unknown): McpConnections {
+  const JSON = mcpConnectionsSchema.parse(data)
+  return {
+    enabled: JSON.enabled,
+    serverURL: JSON.server_url,
+    connections: JSON.connections.map((connection) => ({
+      id: connection.id,
+      clientName: connection.client_name,
+      canAct: connection.scopes.includes('mcp:write'),
+      groups: connection.groups,
+      expiresAt: new Date(connection.expires_at),
+    })),
+  }
+}
+
+const mcpDecisionSchema = z.object({ redirect_uri: z.url() })
+
+/**
+ * Extracts the assistant callback URL from a received consent decision.
+ *
+ * @param data The JSON data received.
+ * @returns The URL to send the browser to.
+ */
+export function mcpDecisionFromJSON(data: unknown): string {
+  return mcpDecisionSchema.parse(data).redirect_uri
 }

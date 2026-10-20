@@ -7,6 +7,7 @@ import type {
   Invitation,
   Market,
   MarketDetail,
+  McpConnections,
   Member,
   Settlement,
   SettleUpTransfer,
@@ -108,6 +109,15 @@ export interface SettlementState {
   settlements: Settlement[] | null
   settlementsLoading: boolean
   settlementsError: StoreError | null
+}
+
+export interface McpConnectionsState {
+  connections: McpConnections | null
+  connectionsLoading: boolean
+  connectionsError: StoreError | null
+
+  /** The connection whose revocation is in flight. */
+  revokingID: number | null
 }
 
 export interface AuthState {

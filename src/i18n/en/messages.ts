@@ -81,6 +81,40 @@ const en: LocaleMessage<VueMessageType> = {
       pending: 'Signing you in…',
       error: 'Sign-in was canceled or didn’t complete. Please try again.',
     },
+    mcpConsent: {
+      title: 'Connect your assistant',
+      signedInAs: 'Signed in as {name} ({email})',
+      requestedBy: 'An app calling itself',
+      wantsAccess: 'wants to connect to your account.',
+      destination: 'Approving sends access to',
+      destinationHint: 'Only connect if you recognize this address.',
+      readDescription:
+        'Read access includes markets, positions, discussions, member names, balances, and settlement details for the groups you select.',
+      groupsLegend: 'Groups to share',
+      groupsHint: 'Select at least one group to connect.',
+      noGroups:
+        'You aren’t in any groups yet. Join or start a group, then connect again from your assistant.',
+      groupsLink: 'Go to your groups',
+      permissionsLegend: 'Permissions',
+      readOnlyRequested: 'This assistant asked for read-only access.',
+      allowWrites: 'Allow actions on my behalf',
+      writeDescription:
+        'Your assistant can create and edit markets, place and cancel your bets, comment, resolve or void eligible markets, and record or void settlements within your permissions. Recording a settlement doesn’t send money.',
+      duration:
+        'Access expires after {days} days. You can revoke it at any time under Connected apps on your account page. To share more groups later, connect again.',
+      connect: 'Connect',
+      deny: 'Deny',
+      accountLink: 'Go to your account',
+      errors: {
+        request_unavailable:
+          'This connection request has expired or was already used. Start again from your assistant.',
+        account_unavailable:
+          'Your account can’t connect assistants right now. Make sure it’s verified, then start again from your assistant.',
+        mcp_disabled:
+          'Assistant connections are turned off right now. Try again later from your assistant.',
+        invalid_request: 'This connection request isn’t valid. Start again from your assistant.',
+      },
+    },
   },
   account: {
     title: 'Your account',
@@ -137,6 +171,28 @@ const en: LocaleMessage<VueMessageType> = {
         market_closing_soon: 'A market is closing soon',
         market_commented: 'Someone comments on a market you created or commented on',
       },
+    },
+    connections: {
+      title: 'Connected apps',
+      setup:
+        'To connect ChatGPT, Claude, or another assistant, add a connector with this server URL. Your assistant then sends you here to choose what it can access.',
+      serverURL: 'Server URL',
+      copy: 'Copy',
+      copied: 'Server URL copied.',
+      copyError: 'Couldn’t copy. Select the URL and copy it instead.',
+      reconnect:
+        'To change an app’s groups or permissions, revoke it here, then connect again from your assistant.',
+      unavailable: 'New assistant connections are currently unavailable.',
+      empty: 'No apps are connected to your account.',
+      groups: 'Groups: {groups}',
+      readOnly: 'Read-only',
+      canAct: 'Can act on your behalf',
+      expires: 'Expires {date}',
+      revoke: 'Revoke access',
+      revokeNamed: 'Revoke access for {name}',
+      confirmRevoke:
+        'Revoke access for {name}? It stops working immediately, and you’ll need to connect again from the assistant to use it.',
+      revoked: '{name} no longer has access.',
     },
   },
   pushBanner: {
