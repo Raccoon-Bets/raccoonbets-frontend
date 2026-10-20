@@ -3,6 +3,36 @@ import type { LocaleMessage } from '@intlify/core-base'
 
 const en: LocaleMessage<VueMessageType> = {
   title: 'Raccoon Bets',
+  mcp: {
+    consentTitle: 'Connect your assistant',
+    requestedBy: '{name} is requesting access to Raccoon Bets.',
+    clientIdentity:
+      'The app will receive authorization at {host}. Only connect an app you recognize.',
+    readDescription:
+      'Read access includes markets, positions, discussions, member names, balances, and settlement details for the groups you select.',
+    chooseGroups: 'Choose groups to share',
+    noGroups: 'Join a group before connecting an assistant.',
+    allowWrites: 'Allow actions on my behalf',
+    writeDescription:
+      'Your assistant can create and edit markets, place and cancel your bets, comment, resolve or void eligible markets, and record or void settlements within your permissions. Recording a settlement does not send money.',
+    consentDuration:
+      'Access expires after 30 days. You can revoke it in Connected Apps at any time. New groups require a new connection.',
+    connect: 'Connect',
+    deny: 'Cancel',
+    connectionsTitle: 'Connected Apps',
+    setup:
+      'Add this server URL in ChatGPT or Claude and choose automatic OAuth client registration:',
+    reconnect:
+      'To reconnect or change groups and permissions, revoke the old connection here, then connect again from your assistant.',
+    unavailable: 'New assistant connections are currently unavailable.',
+    noConnections: 'No connected apps yet.',
+    readOnly: 'Read-only access',
+    readWrite: 'Read and act on your behalf',
+    revoked: 'Revoked',
+    expired: 'Expired',
+    expires: 'Expires {date}',
+    revoke: 'Revoke access',
+  },
   a11y: {
     skipToContent: 'Skip to main content',
   },

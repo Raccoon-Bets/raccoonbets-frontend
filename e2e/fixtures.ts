@@ -6,7 +6,7 @@ import { GroupsNewPage } from './pages/GroupsNewPage'
 // The cypress-environment backend from Procfile.e2e, bound to 127.0.0.1:5000.
 // Fixture/helper requests go straight to it (no CORS involved); the SPA
 // itself talks to the same server as http://api.lvh.me:5000 per .env.test.
-const API_HOST = 'http://127.0.0.1:5000'
+const API_HOST = process.env.E2E_API_URL ?? 'http://127.0.0.1:5000'
 
 type Fixtures = {
   signUpPage: SignUpPage

@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import requireAuth from '@/composables/requireAuth'
 import AccountForm from '@/components/account/form.vue'
 import AccountPasskeys from '@/components/account/passkeys.vue'
+import AccountConnections from '@/components/account/connections.vue'
 import AccountNotifications from '@/components/account/notifications.vue'
 import UserMenu from '@/components/userMenu.vue'
 import StickerCard from '@/components/sticker/stickerCard.vue'
@@ -23,6 +24,9 @@ requireAuth()
     </sticker-card>
     <sticker-card class="detail-section">
       <account-notifications />
+    </sticker-card>
+    <sticker-card class="detail-section">
+      <account-connections />
     </sticker-card>
   </main>
 </template>
