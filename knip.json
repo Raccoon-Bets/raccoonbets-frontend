@@ -4,7 +4,7 @@
   "project": ["src/**/*.{ts,vue}"],
   "ignore": [],
   "ignoreBinaries": [],
-  "ignoreDependencies": ["@testing-library/vue"],
+  "ignoreDependencies": ["@testing-library/vue", "@typescript/native"],
   "ignoreExportsUsedInFile": true,
   "rules": {
     "exports": "error",

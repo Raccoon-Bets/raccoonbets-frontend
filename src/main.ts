@@ -28,14 +28,26 @@ if (config.sentryDSN) {
     dsn: config.sentryDSN,
     release: import.meta.env.VITE_SENTRY_RELEASE || undefined,
     environment: import.meta.env.PROD ? 'production' : 'development',
-    sendDefaultPii: false,
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: {
+        request: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+        response: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+      },
+      httpBodies: [],
+      urlQueryParams: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+      genAI: { inputs: false, outputs: false },
+      databaseQueryData: false,
+      graphQL: { document: false, variables: false },
+    },
     integrations: [
       Sentry.vueIntegration({ tracingOptions: { trackComponents: true } }),
       Sentry.browserTracingIntegration({ router }),
     ],
     // no replayIntegration, no createSentryPiniaPlugin
     tracesSampleRate: 1.0,
-    enableLogs: true,
+
     ignoreErrors: [
       // Browser-extension content scripts inject WebExtension messaging into
       // the page; their failures are not our code and are unfixable here.

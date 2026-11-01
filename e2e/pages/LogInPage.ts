@@ -18,8 +18,7 @@ export class LogInPage {
   }
 
   /**
-   * Submits the form and waits for `confirmed` to observe the outcome, re-clicking if a
-   * Turnstile token re-issue swallowed the click.
+   * Submits the form after Turnstile is ready and waits for `confirmed` to observe the outcome.
    *
    * @param confirmed synchronizes on the result, whether that is a session or a rejection
    */

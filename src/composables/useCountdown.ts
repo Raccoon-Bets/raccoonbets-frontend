@@ -1,5 +1,5 @@
 import { computed, toValue, watchEffect, type ComputedRef, type MaybeRefOrGetter } from 'vue'
-import { useNow } from '@vueuse/core'
+import { useIntervalFn, useNow } from '@vueuse/core'
 import { global } from '@/i18n'
 
 /** How often the countdown re-evaluates. Minute granularity makes a 30s tick plenty. */
@@ -66,7 +66,10 @@ export interface Countdown {
  * @returns The reactive countdown text and urgency.
  */
 export default function useCountdown(deadline: MaybeRefOrGetter<Date>): Countdown {
-  const { now, pause, resume } = useNow({ interval: TICK_MS, controls: true })
+  const { now, pause, resume } = useNow({
+    scheduler: (callback) => useIntervalFn(callback, TICK_MS),
+    controls: true,
+  })
 
   // No point ticking once the deadline has passed; resume if it moves into the
   // future again (lock times are editable).
