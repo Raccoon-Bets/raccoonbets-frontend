@@ -55,24 +55,31 @@ export default function useChannel<T>(options: {
     subscription = null
   }
 
+  // Watched by value: the getter returns a fresh object on every evaluation, and resubscribing
+  // with identical params would churn the server-side subscription.
+  const paramsKey = (): string | null => {
+    const params = options.params()
+    return params === null ? null : JSON.stringify(params)
+  }
+
   // The Action Cable client is downloaded on demand, so ask the store for a consumer as soon
   // as this scope is ready to subscribe.
   watch(
-    [() => authStore.actionCableURL, options.params],
-    ([, params]) => {
-      if (params === null) return
+    [() => authStore.actionCableURL, paramsKey],
+    ([, key]) => {
+      if (key === null) return
       authStore.connectActionCable().catch(notifySentry)
     },
     { immediate: true },
   )
 
   watch(
-    [() => authStore.actionCableConsumer, options.params],
-    ([consumer, params]) => {
+    [() => authStore.actionCableConsumer, paramsKey],
+    ([consumer, key]) => {
       unsubscribe()
-      if (consumer === null || params === null) return
+      if (consumer === null || key === null) return
       subscription = consumer.subscriptions.create(
-        { channel: options.channel, ...params },
+        { channel: options.channel, ...(JSON.parse(key) as Record<string, unknown>) },
         {
           received: (data: unknown) => {
             const message = parseChannelMessage(options.schema, data)
