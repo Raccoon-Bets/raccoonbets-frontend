@@ -6,7 +6,7 @@ export interface Config {
   /** Base URL of the Rails API (e.g. `http://api.lvh.me:5000`). */
   APIURL: string
 
-  /** WebSocket URL of the AnyCable server (e.g. `ws://ws.lvh.me:8080/cable`). */
+  /** WebSocket URL of the Action Cable endpoint (e.g. `ws://api.lvh.me:5000/cable`). */
   actionCableURL: string
 
   /**

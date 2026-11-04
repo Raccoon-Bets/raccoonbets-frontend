@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/modules/auth'
 import { notifySentry } from '@/utils/errors'
 
 /**
- * A realtime event from {@link https://github.com/anycable | AnyCable}. Every backend channel
+ * A realtime event from an Action Cable channel. Every backend channel
  * broadcasts `{type, ...}` payloads; subscribers refetch what they display, so the extra fields
  * are not modeled.
  */

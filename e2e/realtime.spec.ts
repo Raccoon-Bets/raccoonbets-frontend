@@ -11,7 +11,7 @@ import {
   resolveMarket,
 } from './helpers'
 
-// Realtime updates over the AnyCable stack (anycable RPC + anycable-go +
+// Realtime updates over Action Cable (served by the Rails backend over
 // Redis, per Procfile.e2e): two members watch the same screens in separate
 // browser contexts, and one's actions appear on the other's page without any
 // reload. Each page's WebSocket frames are tracked so a test only acts after

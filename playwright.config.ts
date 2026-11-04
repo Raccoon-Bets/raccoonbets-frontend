@@ -25,8 +25,8 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   /* Only the SPA preview is booted here. The backend stack — Rails in the
      `cypress` env (with the __cypress__ reset/last_email/lock_market
-     middlewares) and the anycable-go server for the realtime specs — is owned
-     by `overmind start -f Procfile.e2e`, which runs this suite once the
+     middlewares) and its Action Cable endpoint for the realtime specs — is
+     owned by `overmind start -f Procfile.e2e`, which runs this suite once the
      backend answers. reuseExistingServer keeps a preview left running by
      `pnpm test:e2e:dev` from being duplicated. */
   webServer: {

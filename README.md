@@ -35,14 +35,13 @@ Local hosts use `lvh.me`, which resolves any subdomain to 127.0.0.1:
 Run unit tests with `pnpm test:unit` and the linters with `pnpm lint`.
 
 End-to-end tests run under Playwright. Playwright boots only the SPA preview
-(port 4173); the back-end stack — Rails in the `cypress` environment and
-anycable-go — is owned by a `Procfile.e2e` in the parent directory, so the
-back-end repository must be checked out as a sibling (`../Backend`). Run the
-whole suite with `overmind start -f Procfile.e2e`:
+(port 4173); the back-end stack — Rails in the `cypress` environment, which
+also serves Action Cable — is owned by a `Procfile.e2e` in the parent
+directory, so the back-end repository must be checked out as a sibling
+(`../Backend`). Run the whole suite with `overmind start -f Procfile.e2e`:
 
 ```procfile
-backend: cd Backend && PORT=5000 ANYCABLE_HTTP_RPC=true rvm 4.0.7@raccoonbets do rails server -e cypress -b 127.0.0.1
-ws: cd Backend && rvm 4.0.7@raccoonbets do bin/anycable-go --port=8080 --rpc_host=http://127.0.0.1:5000/_anycable
+backend: cd Backend && PORT=5000 rvm use . && rails server -e cypress -b 127.0.0.1
 e2e: cd Frontend && until curl -sfo /dev/null http://127.0.0.1:5000/up; do sleep 1; done && pnpm test:e2e
 ```
 
@@ -52,8 +51,9 @@ the same way.
 #### Deployment
 
 The app is deployed on Fly.io as `raccoonbets-frontend`, automatically after CI
-completes via the `deploy.yml` workflow. In production it sits behind the
-`raccoonbets-proxy` nginx app, which fronts the API at `api.raccoonbets.org`.
+completes via the `deploy.yml` workflow. In production Cloudflare fronts
+`api.raccoonbets.org`, which serves the API and the `/cable` WebSocket directly
+from the backend app.
 
 The workflow builds the bundle on the runner, uploads its source maps to Sentry,
 strips them, and only then hands the build context to `flyctl`. The image copies
