@@ -95,6 +95,37 @@ app.config.errorHandler = (err, _instance, info) => {
 }
 
 /**
+ * The subset of the Trusted Types API used here, which lib.dom does not declare. A policy's
+ * `createScriptURL` returns a `TrustedScriptURL`; it is typed as `string` because that is what
+ * `ServiceWorkerContainer#register` accepts in lib.dom.
+ */
+interface TrustedTypesWindow {
+  trustedTypes?: {
+    createPolicy(
+      name: string,
+      rules: { createScriptURL: (url: string) => string },
+    ): { createScriptURL: (url: string) => string }
+  }
+}
+
+/**
+ * Wraps a script URL for sinks guarded by `require-trusted-types-for 'script'`, using a policy
+ * that accepts only that URL. Browsers without Trusted Types get the plain string.
+ *
+ * @param url The script URL.
+ * @returns The URL as a `TrustedScriptURL` where supported, otherwise the URL itself.
+ */
+function trustedScriptURL(url: string): string {
+  const policy = (window as TrustedTypesWindow).trustedTypes?.createPolicy('service-worker', {
+    createScriptURL: (input) => {
+      if (input !== url) throw new TypeError(`Untrusted script URL: ${input}`)
+      return input
+    },
+  })
+  return policy?.createScriptURL(url) ?? url
+}
+
+/**
  * Installs the Workbox service worker that backs offline use.
  *
  * A failed registration costs offline caching and nothing else, so the
@@ -106,7 +137,7 @@ function registerServiceWorker(): void {
   window.addEventListener('load', () => {
     const swURL = `${import.meta.env.BASE_URL}sw.js`
     navigator.serviceWorker
-      .register(swURL, { scope: import.meta.env.BASE_URL })
+      .register(trustedScriptURL(swURL), { scope: import.meta.env.BASE_URL })
       .catch((error: unknown) => {
         Sentry.logger.warn('Service worker registration failed', {
           reason: error instanceof Error ? error.message : String(error),
