@@ -17,6 +17,7 @@ import { errorToString } from '@/utils/errors'
 import { afterAuthRoute } from '@/utils/returnTo'
 import { useAuthStore } from '@/stores/modules/auth'
 import { usePasskeysStore } from '@/stores/modules/passkeys'
+import type { Errors } from '@/stores/types'
 import AuthCard from '@/components/authCard.vue'
 import OauthButtons from '@/components/oauthButtons.vue'
 
@@ -50,6 +51,9 @@ const errorMessage = computed<string | null>(() =>
 
 const passkeysSupported = browserSupportsWebAuthn()
 const passkeyError = ref<string | null>(null)
+let unmounted = false
+
+const errorsSentence = (errors: Errors): string => Object.values(errors).flat().join(', ')
 
 async function logInWithPasskey(): Promise<void> {
   passkeyError.value = null
@@ -58,7 +62,7 @@ async function logInWithPasskey(): Promise<void> {
     // modal picker; startAuthentication aborts the conditional UI itself.
     const result = await passkeysStore.logIn({ useBrowserAutofill: false })
     if (result.ok) await router.push(afterAuthRoute())
-    else passkeyError.value = Object.values(result.val).flat().join(', ')
+    else passkeyError.value = errorsSentence(result.val)
   } catch (err) {
     // A dismissed picker rejects too; that's not worth surfacing loudly,
     // but a real failure message helps debug passkey issues.
@@ -66,18 +70,32 @@ async function logInWithPasskey(): Promise<void> {
   }
 }
 
-onMounted(async () => {
-  if (!(await browserSupportsWebAuthnAutofill())) return
+// Offers passkeys through autofill until one logs in. A passkey the server
+// rejects (such as one picked after its challenge expired) re-arms autofill
+// with fresh options; each attempt waits on the user picking a passkey.
+async function armPasskeyAutofill(): Promise<void> {
   try {
     const result = await passkeysStore.logIn({ useBrowserAutofill: true })
     if (result.ok) await router.push(afterAuthRoute())
+    else rearmPasskeyAutofill(result.val)
   } catch {
     // Autofill rejects when the user dismisses it, navigates away, or
-    // submits the password form. None of these are errors worth surfacing.
+    // submits the password form, and when no options can be fetched. None
+    // of these are errors worth surfacing.
   }
+}
+
+function rearmPasskeyAutofill(rejection: Errors): void {
+  passkeyError.value = errorsSentence(rejection)
+  if (!unmounted) void armPasskeyAutofill()
+}
+
+onMounted(async () => {
+  if (await browserSupportsWebAuthnAutofill()) await armPasskeyAutofill()
 })
 
 onBeforeUnmount(() => {
+  unmounted = true
   WebAuthnAbortService.cancelCeremony()
 })
 </script>

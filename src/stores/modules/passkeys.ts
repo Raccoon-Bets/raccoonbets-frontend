@@ -9,7 +9,7 @@ import {
 import type { APIResponse, Errors } from '@/stores/types'
 import type { Passkey } from '@/types'
 import { userFromJSON, type PasskeyJSONDown, type UserJSONDown } from '@/stores/coding'
-import { request, requestJSON } from '@/stores/modules/root'
+import { authorizationToken, request, requestJSON } from '@/stores/modules/root'
 import {
   ignoreAPIResponseBodyOrReturnErrors,
   ignoreResponseBody,
@@ -50,6 +50,33 @@ interface WebauthnLoginResponse extends UserJSONDown {
   webauthn_auth_challenge_hmac?: string
 }
 
+interface CeremonyOptions<T> {
+  options: T
+  /** The JWT Rodauth binds the ceremony's challenge to; only the request
+   *  completing the ceremony may carry it. */
+  challengeToken: string | null
+}
+
+/**
+ * Asks Rodauth for a WebAuthn ceremony's options. The request omits the
+ * credential Rodauth ultimately expects, so it answers with a 4xx carrying the
+ * options in its body and, in its Authorization header, the JWT of the session
+ * holding the challenge.
+ */
+async function requestCeremonyOptions<T>(
+  path: string,
+  { unauthenticated = false } = {},
+): Promise<CeremonyOptions<T>> {
+  const response = await request({
+    method: 'post',
+    path,
+    body: {},
+    unauthenticated,
+    skipResetAuth: true,
+  })
+  return { options: (await response.json()) as T, challengeToken: authorizationToken(response) }
+}
+
 export const usePasskeysStore = defineStore('passkeys', {
   state: () => ({ ...initialState }),
 
@@ -70,18 +97,15 @@ export const usePasskeysStore = defineStore('passkeys', {
       this.registering = true
       try {
         // 1. Ask Rodauth for credential creation options.
-        //    The first POST returns 401 with the options payload because the
-        //    password param isn't yet provided; we use the options anyway.
-        const optionsResponse = await request({
-          method: 'post',
-          path: '/webauthn-setup',
-          body: {},
-          skipResetAuth: true,
-        })
-        const optionsBody = (await optionsResponse.json()) as WebauthnSetupResponse
-        const { webauthn_setup, webauthn_setup_challenge, webauthn_setup_challenge_hmac } =
-          optionsBody
-        if (!webauthn_setup || !webauthn_setup_challenge || !webauthn_setup_challenge_hmac) {
+        const { options, challengeToken } =
+          await requestCeremonyOptions<WebauthnSetupResponse>('/webauthn-setup')
+        const { webauthn_setup, webauthn_setup_challenge, webauthn_setup_challenge_hmac } = options
+        if (
+          !webauthn_setup ||
+          !webauthn_setup_challenge ||
+          !webauthn_setup_challenge_hmac ||
+          !challengeToken
+        ) {
           return new Err({ base: ['Missing WebAuthn setup options'] })
         }
 
@@ -99,6 +123,7 @@ export const usePasskeysStore = defineStore('passkeys', {
             password,
             label,
           },
+          bearerToken: challengeToken,
         })
         const result = ignoreAPIResponseBodyOrReturnErrors(registerResponse)
         if (!result.ok) return new Err(result.val)
@@ -121,7 +146,9 @@ export const usePasskeysStore = defineStore('passkeys', {
      * picker immediately.
      *
      * @param useBrowserAutofill Whether to use conditional UI rather than the modal picker.
-     * @returns A Result containing nothing if successful, or errors.
+     * @returns A Result containing nothing if successful, or the errors Rodauth rejected the
+     *   completed ceremony with.
+     * @throws When Rodauth provides no ceremony options, or when the ceremony is canceled.
      */
 
     async logIn({
@@ -133,19 +160,20 @@ export const usePasskeysStore = defineStore('passkeys', {
       const account = useAccountStore()
 
       // 1. Ask Rodauth for credential request options with no login param.
-      //    Rodauth returns the options in the body with a 4xx status, since
-      //    the request is missing the credential response it expects.
-      const optionsResponse = await request({
-        method: 'post',
-        path: '/webauthn-login',
-        body: {},
-        unauthenticated: true,
-        skipResetAuth: true,
-      })
-      const optionsBody = (await optionsResponse.json()) as WebauthnLoginResponse
-      const { webauthn_auth, webauthn_auth_challenge, webauthn_auth_challenge_hmac } = optionsBody
-      if (!webauthn_auth || !webauthn_auth_challenge || !webauthn_auth_challenge_hmac) {
-        return new Err({ base: ['Missing WebAuthn login options'] })
+      //    The challenge token is a pre-login session, so it goes no further
+      //    than this ceremony's completing request.
+      const { options, challengeToken } = await requestCeremonyOptions<WebauthnLoginResponse>(
+        '/webauthn-login',
+        { unauthenticated: true },
+      )
+      const { webauthn_auth, webauthn_auth_challenge, webauthn_auth_challenge_hmac } = options
+      if (
+        !webauthn_auth ||
+        !webauthn_auth_challenge ||
+        !webauthn_auth_challenge_hmac ||
+        !challengeToken
+      ) {
+        throw new Error('Missing WebAuthn login options')
       }
 
       // 2. Run the ceremony. With autofill this resolves when the user picks
@@ -168,8 +196,7 @@ export const usePasskeysStore = defineStore('passkeys', {
             webauthn_auth_challenge,
             webauthn_auth_challenge_hmac,
           },
-          unauthenticated: true,
-          skipResetAuth: true,
+          bearerToken: challengeToken,
         })
         const result = loadAPIResponseBodyOrReturnErrors(loginResponse)
         if (!result.ok) return new Err(result.val)

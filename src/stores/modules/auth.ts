@@ -5,7 +5,7 @@ import { Err, Ok, type Result } from 'ts-results'
 import type { APIResponse, AuthState, Errors } from '@/stores/types'
 import config from '@/config'
 import { userFromJSON, type SessionJSONUp, type UserJSONDown } from '@/stores/coding'
-import { request, requestJSON } from '@/stores/modules/root'
+import { authorizationToken, request, requestJSON } from '@/stores/modules/root'
 import { ignoreResponseBody, loadAPIResponseBodyOrReturnErrors } from '@/stores/utils'
 import { getCookie, removeCookie, setCookie } from '@/utils/cookieStorage'
 import { useAccountStore } from '@/stores/modules/account'
@@ -169,13 +169,9 @@ export const useAuthStore = defineStore('auth', {
      */
 
     setTokens(response: Response, body: UserJSONDown): void {
-      const authorization = response.headers.get('Authorization')
       const patch: Partial<AuthState> = { loggingIn: false }
-      if (authorization && /^Bearer /.exec(authorization)) {
-        patch.JWT = authorization.slice(7)
-      } else if (body.access_token) {
-        patch.JWT = body.access_token
-      }
+      const JWT = authorizationToken(response) ?? body.access_token
+      if (JWT) patch.JWT = JWT
       if (body.refresh_token) patch.refreshToken = body.refresh_token
       this.$patch(patch)
     },

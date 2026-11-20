@@ -27,6 +27,11 @@ interface RequestArgs {
   skipResetAuth?: boolean
   /** Don't include the Authorization header (for fully public endpoints). */
   unauthenticated?: boolean
+  /** Authenticate with this JWT instead of the session's (e.g. the token a
+   *  WebAuthn options response binds its challenge to). The session doesn't
+   *  own this token, so a 401 is returned as-is rather than refreshing or
+   *  resetting the session. */
+  bearerToken?: string
   /** Internal: suppress the refresh-and-retry on 401. Set on the refresh
    *  request itself and on the single post-refresh replay so neither can
    *  recurse back into another refresh. */
@@ -97,12 +102,24 @@ export function groupPath(path: string): string {
   return `/groups/${groupSlug}${path}`
 }
 
+/**
+ * Reads the JWT Rodauth returns in a response's Authorization header.
+ *
+ * @param response A response from the API.
+ * @returns The JWT, or `null` when the response carries none.
+ */
+export function authorizationToken(response: Response): string | null {
+  const authorization = response.headers.get('Authorization')
+  return authorization ? authorization.replace(/^Bearer\s+/, '') : null
+}
+
 export async function request({
   method,
   path,
   body,
   skipResetAuth,
   unauthenticated,
+  bearerToken,
   skipRefresh,
 }: RequestArgs): Promise<Response> {
   const auth = useAuthStore()
@@ -117,6 +134,11 @@ export async function request({
 
   const url = config.APIURL + path
 
+  const authorizationHeader = (): string | null => {
+    if (bearerToken !== undefined) return `Bearer ${bearerToken}`
+    return unauthenticated ? null : auth.authHeader
+  }
+
   // Rebuilt per attempt so a replay after refresh carries the new token.
   const buildInit = (): RequestInit => {
     // `Accept-Language` is a forbidden header for fetch, so the active locale is sent
@@ -125,7 +147,8 @@ export async function request({
       Accept: 'application/json',
       'X-Locale': global.locale.value,
     }
-    if (!unauthenticated && auth.authHeader !== null) headers.Authorization = auth.authHeader
+    const authorization = authorizationHeader()
+    if (authorization !== null) headers.Authorization = authorization
     if (!(body instanceof FormData) && typeof body !== 'string') {
       headers['Content-Type'] = 'application/json'
     }
@@ -150,7 +173,7 @@ export async function request({
   }
 
   const response = await fetchWithColdStartRetry(1)
-  if (response.status !== 401 || skipResetAuth) return response
+  if (response.status !== 401 || skipResetAuth || bearerToken !== undefined) return response
 
   // Expired but refreshable: get a new token and replay with it.
   if (!skipRefresh && (await refreshAccessTokenOnce(auth))) {

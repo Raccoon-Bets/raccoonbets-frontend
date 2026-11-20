@@ -130,6 +130,26 @@ describe('request refresh-and-retry', () => {
     expect(auth.refreshToken).toBe('sibling-refresh')
   })
 
+  it('sends an explicit bearer token and leaves the session alone when it is rejected', async () => {
+    const fetchMock = vi
+      .fn<FetchFn>()
+      .mockResolvedValue(jsonResponse(401, { error: 'invalid webauthn auth param' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const auth = useAuthStore()
+    const result = await requestJSON({
+      method: 'post',
+      path: '/webauthn-login',
+      bearerToken: 'challenge.jwt.token',
+    })
+
+    expect(result.ok).toBe(false)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(authHeaderOf(fetchMock.mock.calls[0][1])).toBe('Bearer challenge.jwt.token')
+    expect(auth.JWT).toBe('old.jwt.token')
+    expect(auth.refreshToken).toBe('old-refresh')
+  })
+
   it('drops the dead session and loads public content anonymously', async () => {
     const fetchMock = vi.fn<FetchFn>((url, init) => {
       if (url.includes('/jwt-refresh')) {
