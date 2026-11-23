@@ -28,6 +28,22 @@ function proxyToApi(request: Request, env: Env): Promise<Response> {
   })
 }
 
+function isSpaFallback(pathname: string, response: Response): boolean {
+  return (
+    !pathname.endsWith('.html') && !!response.headers.get('Content-Type')?.startsWith('text/html')
+  )
+}
+
+/**
+ * Serves a dotted path (`/favicon.ico`, `/sw.js`, probes like `/.env`) from the
+ * assets. The asset layer answers a missing file with the SPA shell, which is
+ * turned into a 404 here so such requests never look like pages.
+ */
+async function serveFile(request: Request, env: Env): Promise<Response> {
+  const response = await env.ASSETS.fetch(request)
+  return isSpaFallback(new URL(request.url).pathname, response) ? notFound() : response
+}
+
 function notFound(): Response {
   return new Response('Not Found', {
     status: 404,
@@ -38,6 +54,6 @@ function notFound(): Response {
 export default {
   fetch(request, env) {
     if (new URL(request.url).pathname.startsWith('/auth/')) return proxyToApi(request, env)
-    return Promise.resolve(notFound())
+    return serveFile(request, env)
   },
 } satisfies ExportedHandler<Env>

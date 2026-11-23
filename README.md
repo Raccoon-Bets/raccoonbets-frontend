@@ -55,8 +55,10 @@ automatically after CI completes via the `deploy.yml` workflow. The built `dist/
 is served as static assets with single-page-app fallback, and `public/_headers`
 sets the cache and security headers. A small Worker (`worker/index.ts`) proxies
 `/auth/*` to `https://api.raccoonbets.org` so the OAuth handshake stays
-first-party to the apex; it answers any other request that matches no asset with 404. In production Cloudflare fronts `api.raccoonbets.org`, which serves the API
-and the `/cable` WebSocket directly from the backend app.
+first-party to the apex. It also serves dotted paths such as `/sw.js` and
+answers 404 when no such file exists, so probes like `/.env` never receive the
+SPA shell. In production Cloudflare fronts `api.raccoonbets.org`, which serves
+the API and the `/cable` WebSocket directly from the backend app.
 
 The workflow builds the bundle on the runner, uploads its source maps to Sentry,
 strips them, and only then runs `wrangler deploy`. Run `pnpm exec wrangler dev`

@@ -44,10 +44,37 @@ describe('worker', () => {
     })
   })
 
-  it('answers any other request with an uncached 404', async () => {
-    const response = await callWorker('https://raccoonbets.org/.env')
+  describe('other paths', () => {
+    function stubAssets(response: Response) {
+      return {
+        ...env,
+        ASSETS: { fetch: vi.fn().mockResolvedValue(response) } as unknown as Fetcher,
+      }
+    }
 
-    expect(response.status).toBe(404)
-    expect(response.headers.get('Cache-Control')).toBe('no-cache, no-transform')
+    it('serves an existing file from the assets', async () => {
+      const file = new Response('body', { headers: { 'Content-Type': 'text/javascript' } })
+
+      const response = await worker.fetch(
+        new Request('https://raccoonbets.org/sw.js') as never,
+        stubAssets(file),
+      )
+
+      expect(response).toBe(file)
+    })
+
+    it('answers an uncached 404 when the assets fall back to the SPA shell', async () => {
+      const shell = new Response('<html>', {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      })
+
+      const response = await worker.fetch(
+        new Request('https://raccoonbets.org/.env') as never,
+        stubAssets(shell),
+      )
+
+      expect(response.status).toBe(404)
+      expect(response.headers.get('Cache-Control')).toBe('no-cache, no-transform')
+    })
   })
 })
