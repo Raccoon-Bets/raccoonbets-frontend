@@ -29,8 +29,8 @@ export default defineConfig(({ command, mode }) => {
       // subdomains of lvh.me (which resolves to 127.0.0.1).
       host: true,
       allowedHosts: ['.lvh.me'],
-      // Mirror production's same-origin OAuth (prod does this in nginx): the
-      // apex brokers the OmniAuth handshake, so proxy /auth/* to the dev
+      // Mirror production's same-origin OAuth (prod does this in the Cloudflare
+      // Worker): the apex brokers the OmniAuth handshake, so proxy /auth/* to the dev
       // backend. Leaving changeOrigin off keeps the incoming Host (lvh.me:5173),
       // so the backend builds its callback URL on the apex and the `state`
       // cookie stays first-party to the apex across the provider round trip.

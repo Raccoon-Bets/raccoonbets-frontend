@@ -1,11 +1,15 @@
 allowBuilds:
   '@parcel/watcher': true
+  esbuild: true
   vue-demi: true
+  workerd: true
 minimumReleaseAgeExclude:
   - knip@6.44.1
 onlyBuiltDependencies:
   - '@parcel/watcher'
+  - esbuild
   - vue-demi
+  - workerd
 # ts-results' CJS build requires tslib but doesn't declare it.
 packageExtensions:
   ts-results:

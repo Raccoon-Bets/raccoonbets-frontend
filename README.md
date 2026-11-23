@@ -50,13 +50,14 @@ the same way.
 
 #### Deployment
 
-The app is deployed on Fly.io as `raccoonbets-frontend`, automatically after CI
-completes via the `deploy.yml` workflow. In production Cloudflare fronts
-`api.raccoonbets.org`, which serves the API and the `/cable` WebSocket directly
-from the backend app.
+The app is deployed to Cloudflare Workers as `raccoonbets-frontend`,
+automatically after CI completes via the `deploy.yml` workflow. The built `dist/`
+is served as static assets with single-page-app fallback, and `public/_headers`
+sets the cache and security headers. A small Worker (`worker/index.ts`) proxies
+`/auth/*` to `https://api.raccoonbets.org` so the OAuth handshake stays
+first-party to the apex; it answers any other request that matches no asset with 404. In production Cloudflare fronts `api.raccoonbets.org`, which serves the API
+and the `/cable` WebSocket directly from the backend app.
 
 The workflow builds the bundle on the runner, uploads its source maps to Sentry,
-strips them, and only then hands the build context to `flyctl`. The image copies
-that prebuilt `dist/` rather than producing its own, so a `docker build` run
-outside the workflow needs `pnpm run build` first — without a `dist/` directory
-it produces an image with no application in it.
+strips them, and only then runs `wrangler deploy`. Run `pnpm exec wrangler dev`
+after `pnpm run build` to try the Worker locally.

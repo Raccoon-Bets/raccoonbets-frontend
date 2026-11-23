@@ -1,0 +1,34 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "raccoonbets-frontend",
+  "account_id": "9edca68dc3e37bad6304e4bc0da34eca",
+  "compatibility_date": "2026-11-20",
+  "main": "./worker/index.ts",
+  // The site is reachable only through its own hostnames, so the workers.dev
+  // hostname stays off and cannot serve a copy that bypasses the zone's
+  // security-header ruleset.
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "raccoonbets.org", "custom_domain": true },
+    { "pattern": "www.raccoonbets.org", "custom_domain": true },
+    // Custom domains cannot be wildcards, so group subdomains use a zone route.
+    // api.raccoonbets.org/* is excluded by a more specific zone route with no
+    // Worker attached, which keeps the Rails backend off this Worker.
+    { "pattern": "*.raccoonbets.org/*", "zone_name": "raccoonbets.org" },
+  ],
+  "vars": {
+    "API_ORIGIN": "https://api.raccoonbets.org",
+  },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Navigations to unknown paths get the SPA shell; the Worker answers 404 to
+    // any other request that matches no file.
+    "not_found_handling": "single-page-application",
+    // The OAuth handshake is proxied to the backend instead of served as assets.
+    "run_worker_first": ["/auth/*"],
+  },
+  "observability": {
+    "enabled": true,
+  },
+}

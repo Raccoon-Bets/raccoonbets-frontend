@@ -1,0 +1,16 @@
+# Hashed Vite build assets are immutable; everything else (index.html, sw.js,
+# registerSW.js, manifest) must revalidate on every request so that deploys,
+# including service-worker updates, propagate immediately.
+#
+# `no-transform` on the revalidated responses stops Cloudflare from injecting
+# its JavaScript Detections script, which the zone's strict script-src would
+# block for lack of 'unsafe-inline'. Content-Security-Policy itself is set by
+# the zone's response-header ruleset so it stays identical across every site.
+/*
+  Cache-Control: no-cache, no-transform
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/assets/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable

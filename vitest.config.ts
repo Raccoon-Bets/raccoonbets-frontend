@@ -10,9 +10,26 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'jsdom',
     exclude: [...configDefaults.exclude, 'e2e/**'],
     root: fileURLToPath(new URL('./', import.meta.url)),
-    setupFiles: ['./vitest.setup.ts'],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'app',
+          environment: 'jsdom',
+          include: ['src/**/*.spec.ts'],
+          setupFiles: ['./vitest.setup.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'worker',
+          environment: 'node',
+          include: ['worker/**/*.spec.ts'],
+        },
+      },
+    ],
   },
 })

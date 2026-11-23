@@ -35,7 +35,7 @@ registerRoute(
         return precachedShell(params)
       }
     },
-    { denylist: [/^\/api/, /\.map$/] },
+    { denylist: [/^\/api/, /^\/auth\//, /\.map$/] },
   ),
 )
 
