@@ -10,5 +10,5 @@
     HTML5, SCSS, Vue 3, Vite, TypeScript, Pinia, Vue Router, Vue I18n
     Sentry, Action Cable, Lucide icons
     Backend: Ruby on Rails (separate repo)
-    Hosting: Fly.io (nginx static), Neon (Postgres), Cloudflare
+    Hosting: Cloudflare Workers (frontend), Fly.io (backend, Managed Postgres)
     CI/CD: GitHub Actions

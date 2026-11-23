@@ -3,22 +3,45 @@ interface Env {
   ASSETS: Fetcher
 }
 
+const APEX_HOST = 'raccoonbets.org'
+
+const CLIENT_FORWARDING_HEADERS = [
+  'host',
+  'forwarded',
+  'x-forwarded-for',
+  'x-forwarded-host',
+  'x-forwarded-proto',
+  'x-real-ip',
+]
+
+/**
+ * Builds the upstream headers: the client's own, minus any forwarding headers
+ * it could have forged, plus trusted ones naming the apex and the visitor's IP
+ * as seen by Cloudflare.
+ */
+function forwardingHeaders(request: Request): Headers {
+  const headers = new Headers(request.headers)
+  for (const name of CLIENT_FORWARDING_HEADERS) headers.delete(name)
+  headers.set('X-Forwarded-Host', APEX_HOST)
+  headers.set('X-Forwarded-Proto', 'https')
+  const clientIp = request.headers.get('CF-Connecting-IP')
+  if (clientIp) {
+    headers.set('X-Forwarded-For', clientIp)
+    headers.set('X-Real-IP', clientIp)
+  }
+  return headers
+}
+
 /**
  * Forwards an OAuth request to the backend. The browser only ever talks to the
  * apex, so the OmniAuth `state` cookie stays first-party; the backend builds
- * its callback URL from `X-Forwarded-Host`. Redirects and `Set-Cookie` headers
- * pass through untouched.
+ * its callback URL from `X-Forwarded-Host`, which is always the apex.
+ * Redirects and `Set-Cookie` headers pass through untouched.
  */
 function proxyToApi(request: Request, env: Env): Promise<Response> {
   const incoming = new URL(request.url)
   const target = new URL(incoming.pathname + incoming.search, env.API_ORIGIN)
-
-  const headers = new Headers(request.headers)
-  headers.delete('host')
-  headers.set('X-Forwarded-Host', incoming.host)
-  headers.set('X-Forwarded-Proto', 'https')
-  const clientIp = request.headers.get('CF-Connecting-IP')
-  if (clientIp) headers.set('X-Real-IP', clientIp)
+  const headers = forwardingHeaders(request)
 
   return fetch(target, {
     method: request.method,

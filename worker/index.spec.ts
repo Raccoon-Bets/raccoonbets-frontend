@@ -42,6 +42,28 @@ describe('worker', () => {
       expect(headers.get('Cookie')).toBe('a=b')
       expect(headers.has('host')).toBe(false)
     })
+
+    it('replaces forged forwarding headers and pins the forwarded host to the apex', async () => {
+      const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 302 }))
+      vi.stubGlobal('fetch', fetchMock)
+
+      await callWorker('https://evil.raccoonbets.org/auth/google', {
+        method: 'POST',
+        headers: {
+          'CF-Connecting-IP': '203.0.113.9',
+          'X-Forwarded-For': '10.0.0.1',
+          'X-Real-IP': '10.0.0.1',
+          'X-Forwarded-Host': 'attacker.example',
+          Forwarded: 'for=10.0.0.1',
+        },
+      })
+
+      const headers = (fetchMock.mock.calls[0] as [URL, RequestInit])[1].headers as Headers
+      expect(headers.get('X-Forwarded-Host')).toBe('raccoonbets.org')
+      expect(headers.get('X-Forwarded-For')).toBe('203.0.113.9')
+      expect(headers.get('X-Real-IP')).toBe('203.0.113.9')
+      expect(headers.has('Forwarded')).toBe(false)
+    })
   })
 
   describe('other paths', () => {

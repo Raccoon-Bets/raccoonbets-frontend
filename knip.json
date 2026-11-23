@@ -10,7 +10,7 @@
   "project": ["src/**/*.{ts,vue}", "worker/**/*.ts"],
   "ignore": [],
   "ignoreBinaries": [],
-  "ignoreDependencies": ["@testing-library/vue", "@typescript/native", "wrangler"],
+  "ignoreDependencies": ["@testing-library/vue", "@typescript/native"],
   "ignoreExportsUsedInFile": true,
   "rules": {
     "exports": "error",
